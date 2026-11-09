@@ -170,6 +170,20 @@ export class Broker {
     return { system, truncated, sentText };
   }
 
+  /** What this app has sent, from its own records. Provider-side quotas are not visible to us. */
+  usage() {
+    const now = Date.now();
+    const used = this.attempts.filter((t) => t > now - 3_600_000).length;
+    const day = new Date(now - 86_400_000).toISOString();
+    const models = this.store.db
+      .prepare("SELECT COALESCE(model, '') AS model, COALESCE(provider, '') AS provider, COALESCE(billing, '') AS billing, COUNT(*) AS replies, COALESCE(SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END), 0) AS last24h, SUM(input_tokens) AS inputTokens, SUM(output_tokens) AS outputTokens, SUM(CASE WHEN input_tokens IS NULL THEN 1 ELSE 0 END) AS unmeasured FROM chat_messages WHERE role = 'assistant' GROUP BY model, provider, billing ORDER BY replies DESC")
+      .all(day);
+    const findings = this.store.db
+      .prepare("SELECT source, COUNT(*) AS total, COALESCE(SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END), 0) AS last24h FROM feedback GROUP BY source")
+      .all(day);
+    return { hour: { used, limit: this.limits.maxAttemptsPerHour }, models, findings, limits: this.limitsSnapshot() };
+  }
+
   limitsSnapshot(): BrokerLimits {
     return { ...this.limits };
   }

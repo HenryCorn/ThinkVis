@@ -71,6 +71,7 @@
       state.baseHash = r.hash;
       api("POST", "/api/notes/" + state.current + "/activity", {}).catch(() => {});
       state.dirty = bodyEl.value !== sent;
+      if (!state.dirty) document.dispatchEvent(new Event("tv:saved"));
       setStatus(state.dirty ? "Unsaved changes" : "Saved", state.dirty ? "dirty" : "ok");
     } catch (e) {
       if (e.status === 409) { showConflict(e.data); }
@@ -103,7 +104,7 @@
       const n = await api("GET", "/api/notes/" + id);
       clearConflict();
       state.current = id; state.baseHash = n.hash; state.dirty = false;
-      bodyEl.value = n.content; pathEl.value = n.path; renderNoteDiagrams();
+      bodyEl.value = n.content; pathEl.value = n.path; renderNoteDiagrams(); document.dispatchEvent(new Event("tv:noteopened"));
       $("purpose").value = n.purpose; $("mode").value = n.assistMode;
       $("empty").hidden = true; $("editor").hidden = false;
       setStatus(n.externallyChanged ? "Reloaded: changed on disk" : "Saved", "ok");
@@ -260,7 +261,7 @@
     fbList.textContent = '';
     if (!items.length) { fbList.appendChild(el('li', 'muted', 'No feedback yet.')); return; }
     items.forEach((f) => {
-      const li = el('li', 'fb-item ' + f.status);
+      const li = el('li', 'fb-item ' + f.status); li.dataset.id = f.id;
       const head = el('div', 'fb-head');
       head.appendChild(el('span', 'badge', f.kind));
       head.appendChild(el('span', 'badge ' + (f.position.status === 'exact' ? '' : 'warn'), BADGE[f.position.status]));
@@ -315,6 +316,7 @@
     try {
       const d = await api('GET', '/api/notes/' + state.current + '/feedback');
       renderFeedback(d.feedback);
+      document.dispatchEvent(new CustomEvent('tv:feedback', { detail: d.feedback }));
       if (d.personaId) $('persona').value = d.personaId;
     } catch (e) { $('fb-status').textContent = e.message; }
   }
@@ -382,6 +384,7 @@
     catch (e) { bodyEl.focus(); bodyEl.select(); setStatus('Select all is ready. Press Ctrl+C to copy.', 'dirty'); }
   });
 
+  window.ThinkVisApp = { $, el, api, state, bodyEl, openNote, flush, refresh, loadFeedback, chat };
   refresh().catch((e) => setStatus(e.message, "dirty"));
   loadConnections().then(() => loadPersonas()).then(loadProactive);
 })();

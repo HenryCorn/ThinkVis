@@ -189,3 +189,27 @@ describe("HTTP host", () => {
     assert.equal(bad.status, 400);
   });
 });
+
+describe("usage and static assets", () => {
+  it("reports what the app sent, from its own records", async () => {
+    const created = await (await fetch(`${base}/api/notes`, { method: "POST", headers: json, body: JSON.stringify({ path: "usage.md", content: "Cells have mitochondria that make energy for the cell." }) })).json() as { id: string };
+    const sent = await fetch(`${base}/api/chat/send`, { method: "POST", headers: json, body: JSON.stringify({ noteId: created.id, message: "hi", connectionId: "mock-echo", requestId: crypto.randomUUID() }) });
+    assert.equal(sent.status, 200);
+    const u = await (await fetch(`${base}/api/usage`, { headers: { Cookie: cookie } })).json() as any;
+    assert.ok(u.hour.used >= 1 && u.hour.limit > 0);
+    const row = u.models.find((m: any) => m.model === "mock-echo");
+    assert.ok(row && row.replies >= 1 && row.last24h >= 1);
+    assert.equal(typeof u.proactive.maxRunsPerDay, "number");
+    assert.equal(u.proactive.enabled, false);
+    assert.equal((await fetch(`${base}/api/usage`)).status, 401);
+  });
+
+  it("serves the UI scripts only to the signed-in browser", async () => {
+    for (const f of ["/theme.js", "/ui.js", "/diagram.js"]) {
+      assert.equal((await fetch(`${base}${f}`)).status, 401);
+      const r = await fetch(`${base}${f}`, { headers: { Cookie: cookie } });
+      assert.equal(r.status, 200);
+      assert.match(r.headers.get("content-type") ?? "", /javascript/);
+    }
+  });
+});

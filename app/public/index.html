@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ThinkVis</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/theme.js"></script>
 </head>
 <body>
   <div class="app">
@@ -17,6 +18,11 @@
         <button id="new-folder" type="button" class="alt">New folder</button>
       </div>
       <nav id="tree" aria-label="Notes"></nav>
+      <div class="tools" role="group" aria-label="Tools">
+        <button id="open-palette" type="button" class="alt" aria-keyshortcuts="Control+K"><span>Commands</span><kbd>Ctrl K</kbd></button>
+        <button id="open-appearance" type="button" class="alt">Appearance</button>
+        <button id="open-usage" type="button" class="alt">Usage</button>
+      </div>
       <button id="export" type="button" class="alt">Export Markdown</button>
       <p id="export-msg" class="muted" role="status"></p>
     </aside>
@@ -47,7 +53,18 @@
           </select>
         </div>
         <label class="sr" for="body">Note text</label>
-        <textarea id="body" spellcheck="true"></textarea>
+        <div class="edit-wrap">
+          <div id="mirror" aria-hidden="true"></div>
+          <textarea id="body" spellcheck="true"></textarea>
+          <div id="sel-bar" class="sel-bar" role="toolbar" aria-label="Ask about the selected text" hidden>
+            <span id="sel-text" class="sel-text"></span>
+            <button type="button" data-ask="explain">Explain</button>
+            <button type="button" data-ask="check" class="alt">Is this right?</button>
+            <button type="button" data-ask="quiz" class="alt">Quiz me</button>
+            <button type="button" data-ask="ask" class="alt">Ask&hellip;</button>
+            <span id="sel-note" class="muted" role="status"></span>
+          </div>
+        </div>
         <section class="diagrams" aria-label="Diagrams in this note" id="note-diagrams" hidden></section>
         <section class="fb" aria-label="Feedback">
           <div class="row">
@@ -114,7 +131,40 @@
       </section>
     </main>
   </div>
+  <dialog id="palette" class="dlg palette" aria-label="Commands">
+    <input id="pal-input" type="text" role="combobox" aria-expanded="true" aria-controls="pal-list" aria-autocomplete="list" placeholder="Type a command or a note title" autocomplete="off" spellcheck="false">
+    <ul id="pal-list" class="pal-list" role="listbox" aria-label="Results"></ul>
+    <p class="pal-hint muted"><kbd>&uarr;</kbd><kbd>&darr;</kbd> to move, <kbd>Enter</kbd> to run, <kbd>Esc</kbd> to close</p>
+  </dialog>
+
+  <dialog id="appearance" class="dlg" aria-labelledby="ap-title">
+    <form method="dialog" class="dlg-body">
+      <h2 id="ap-title">Appearance</h2>
+      <p class="muted">Saved in this browser only.</p>
+      <label for="ap-theme">Theme</label>
+      <select id="ap-theme"><option value="system">Match my system</option><option value="light">Light</option><option value="dark">Dark</option></select>
+      <label for="ap-size">Editor text size</label>
+      <select id="ap-size"><option value="14">Small (14)</option><option value="16">Medium (16)</option><option value="18">Large (18)</option><option value="20">Extra large (20)</option></select>
+      <label for="ap-font">Editor typeface</label>
+      <select id="ap-font"><option value="mono">Monospace</option><option value="text">Proportional</option></select>
+      <label for="ap-spacing">Line spacing</label>
+      <select id="ap-spacing"><option value="tight">Tight</option><option value="comfortable">Comfortable</option><option value="airy">Airy</option></select>
+      <label for="ap-width">Editor width</label>
+      <select id="ap-width"><option value="full">Fill the window</option><option value="readable">Readable column</option></select>
+      <div class="row dlg-actions"><button type="button" id="ap-reset" class="alt">Reset to defaults</button><button value="close">Done</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="usage" class="dlg wide" aria-labelledby="us-title">
+    <form method="dialog" class="dlg-body">
+      <h2 id="us-title">Usage</h2>
+      <div id="us-body" aria-live="polite">Loading&hellip;</div>
+      <div class="row dlg-actions"><button type="button" id="us-refresh" class="alt">Refresh</button><button value="close">Close</button></div>
+    </form>
+  </dialog>
+
   <script src="/diagram.js"></script>
   <script src="/app.js"></script>
+  <script src="/ui.js"></script>
 </body>
 </html>

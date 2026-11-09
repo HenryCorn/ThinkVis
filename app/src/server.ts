@@ -14,6 +14,8 @@ const PUBLIC_DIR = path.resolve(import.meta.dirname, "..", "public");
 const STATIC: Record<string, { file: string; type: string }> = {
   "/": { file: "index.html", type: "text/html; charset=utf-8" },
   "/diagram.js": { file: "diagram.js", type: "text/javascript; charset=utf-8" },
+  "/theme.js": { file: "theme.js", type: "text/javascript; charset=utf-8" },
+  "/ui.js": { file: "ui.js", type: "text/javascript; charset=utf-8" },
   "/app.js": { file: "app.js", type: "text/javascript; charset=utf-8" },
   "/style.css": { file: "style.css", type: "text/css; charset=utf-8" },
 };
@@ -176,6 +178,9 @@ export function createApp(store: NoteStore, opts: { token?: string; broker?: Bro
       if (resource === "notes" && parts.length === 4 && parts[3] === "thread" && method === "GET") {
         if (!UUID.test(id)) return sendJson(res, 404, { error: "Not found." });
         return sendJson(res, 200, { messages: broker.thread(id) });
+      }
+      if (resource === "usage" && parts.length === 2 && method === "GET") {
+        return sendJson(res, 200, { ...broker.usage(), proactive: { ...proactive.day(), ...feedback.getProactive() } });
       }
       if (resource === "connections" && parts.length === 2 && method === "GET") {
         return sendJson(res, 200, { connections: broker.listConnections() });

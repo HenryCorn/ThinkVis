@@ -126,6 +126,11 @@ export class Proactive {
     }
   }
 
+  day() {
+    const cutoff = this.opts.now() - 86_400_000;
+    return { runsToday: this.runs.filter((t) => t > cutoff).length, maxRunsPerDay: this.opts.maxRunsPerDay, cooldownMinutes: this.opts.cooldownMs / 60_000, quietSeconds: this.opts.debounceMs / 1000 };
+  }
+
   status(noteId: string) {
     const s = this.notes.get(noteId);
     const e = this.eligible(noteId);
