@@ -68,3 +68,6 @@ button.alt { background: transparent; color: var(--accent); border: 1px solid va
 .fb-thread { display: flex; flex-direction: column; gap: 6px; }
 .fb-thread textarea { min-height: 52px; font-family: inherit; font-size: 15px; }
 .fb-item .tag { margin: 0; color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; }
+
+.pe { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.pe textarea { min-height: 64px; font-family: inherit; font-size: 15px; }

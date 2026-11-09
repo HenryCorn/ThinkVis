@@ -153,6 +153,7 @@ export function createApp(store: NoteStore, opts: { token?: string; broker?: Bro
       if (resource === "feedback" && parts.length >= 2 && UUID.test(id ?? "")) {
         if (parts.length === 3 && method === "GET") return sendJson(res, 200, feedback.get(id));
         if (parts.length === 3 && method === "PATCH") return sendJson(res, 200, feedback.setStatus(id, (await readJson(req)).status));
+        if (parts.length === 4 && parts[3] === "note" && method === "POST") return sendJson(res, 201, feedback.toNote(id));
         if (parts.length === 4 && parts[3] === "reply" && method === "POST") {
           const body = await readJson(req);
           return sendJson(res, 200, await feedback.reply(id, { message: body.message, connectionId: body.connectionId, requestId: body.requestId }));
@@ -160,8 +161,8 @@ export function createApp(store: NoteStore, opts: { token?: string; broker?: Bro
       }
       if (resource === "personas") {
         if (parts.length === 2 && method === "GET") return sendJson(res, 200, { personas: feedback.listPersonas() });
-        if (parts.length === 2 && method === "POST") { const b = await readJson(req); return sendJson(res, 201, feedback.createPersona({ name: b.name, instructions: b.instructions })); }
-        if (parts.length === 3 && method === "PUT" && /^[a-z0-9-]{2,64}$/.test(id)) { const b = await readJson(req); return sendJson(res, 200, feedback.updatePersona(id, { name: b.name, instructions: b.instructions })); }
+        if (parts.length === 2 && method === "POST") { const b = await readJson(req); return sendJson(res, 201, feedback.createPersona({ name: b.name, instructions: b.instructions, voice: b.voice, frequency: b.frequency })); }
+        if (parts.length === 3 && method === "PUT" && /^[a-z0-9-]{2,64}$/.test(id)) { const b = await readJson(req); return sendJson(res, 200, feedback.updatePersona(id, { name: b.name, instructions: b.instructions, voice: b.voice, frequency: b.frequency })); }
       }
       if (resource === "settings" && parts[2] === "proactive" && parts.length === 3) {
         if (method === "GET") return sendJson(res, 200, feedback.getProactive());

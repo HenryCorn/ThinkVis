@@ -97,6 +97,12 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX feedback_replies_fb ON feedback_replies(feedback_id);
   `,
+  `
+  ALTER TABLE personas ADD COLUMN voice TEXT NOT NULL DEFAULT 'plain';
+  ALTER TABLE personas ADD COLUMN frequency TEXT NOT NULL DEFAULT 'when-it-matters';
+  ALTER TABLE persona_versions ADD COLUMN voice TEXT NOT NULL DEFAULT 'plain';
+  ALTER TABLE persona_versions ADD COLUMN frequency TEXT NOT NULL DEFAULT 'when-it-matters';
+  `,
 ];
 
 export function openDb(file: string): DatabaseSync {

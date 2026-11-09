@@ -5,7 +5,7 @@ Local Markdown notebook with note-scoped chat through a provider broker. No npm 
 ```
 cd app
 npm start        # prints http://127.0.0.1:4317/?token=...  Open that link once.
-npm test         # 70 tests
+npm test         # 73 tests
 ```
 
 Environment: `THINKVIS_DATA` (default `../app-data`, git-ignored), `THINKVIS_PORT` (default 4317).
@@ -34,9 +34,10 @@ Behavior: the note text plus your message is sent only when you press Send (the 
 - **Get feedback** asks the chosen model for up to three corrections, questions or suggestions, each tied to an exact quote from your note. Quotes must appear once in the note; anything the model invents, repeats or cannot anchor is dropped and counted. Malformed model output stores nothing.
 - Each item records the note revision, persona (with version), connection and model. The list shows two separate facts: **quote position** (found, moved, ambiguous, gone) and **freshness** (written for an earlier version). "Show in note" selects the quote.
 - Resolve, dismiss, reopen, and reply in a thread. A resolved item is not reopened by a later duplicate.
-- Personas are independent of the model. Three built-ins plus your own; editing creates a new version and old feedback keeps the version that wrote it.
+- Personas are independent of the model: name, instructions, voice (plain, warm, blunt, playful) and how often they speak up (rarely, when it matters, often). Three built-ins plus your own; editing creates a new version and old feedback keeps the version that wrote it. "Speaks up" stretches or shortens the proactive cooldown (3x, 1x, 0.5x), which is our own mapping.
+- **Make a note** turns a feedback thread into a new note under `From feedback/`; the source note is untouched. **Copy Markdown** copies the open note when you press it.
 - **Proactive feedback** is off by default, needs a chosen connection, and only acts on notes set to Proactive. It waits for a quiet period, a per-note cooldown and a daily cap, requires the note to have changed, and rechecks everything before each outbound attempt. Switching a note to Quiet, or turning the switch off, cancels queued work and aborts an in-flight request. Text already sent cannot be recalled.
 - Markdown export appends a Feedback section (resolved and dismissed included) to the exported copy only.
 
 ## Not done yet
-Rich Markdown preview, undo beyond the browser textarea, backup/restore (manual export only, per D020), streaming (replies arrive whole), rich Markdown preview, per-note highlight of quotes inside the editor, sharing.
+Rich Markdown preview, undo beyond the browser textarea, backup/restore (manual export only, per D020), streaming (replies arrive whole), highlighting quotes inside the editor, selected-text assistance, appearance settings, command palette, an allowance/usage screen, images, voice, PDF/Word export and sharing. Several of these were only seen as buttons in Riddled and never tested there, so they are not claimed as parity.

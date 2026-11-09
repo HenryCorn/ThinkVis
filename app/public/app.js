@@ -266,6 +266,12 @@
       }
       const mk = (label, status) => { const b = el('button', 'alt', label); b.type = 'button'; b.addEventListener('click', async () => { await api('PATCH', '/api/feedback/' + f.id, { status }).catch((e) => ($('fb-status').textContent = e.message)); loadFeedback(); }); return b; };
       if (f.status === 'open') { row.appendChild(mk('Resolve', 'resolved')); row.appendChild(mk('Dismiss', 'dismissed')); } else row.appendChild(mk('Reopen', 'open'));
+      const mkNote = el('button', 'alt', 'Make a note'); mkNote.type = 'button';
+      mkNote.addEventListener('click', async () => {
+        try { const n = await api('POST', '/api/feedback/' + f.id + '/note', {}); await refresh(); $('fb-status').textContent = 'Created ' + n.path; }
+        catch (e) { $('fb-status').textContent = e.message; }
+      });
+      row.appendChild(mkNote);
       const r = el('button', 'alt', 'Reply' + (f.replies ? ' (' + f.replies + ')' : '')); r.type = 'button';
       r.addEventListener('click', () => toggleThread(li, f));
       row.appendChild(r);
@@ -302,8 +308,27 @@
   }
   async function loadPersonas() {
     try { fbState.personas = (await api('GET', '/api/personas')).personas; } catch (e) { fbState.personas = []; }
-    fillPersonaSelect($('persona')); fillPersonaSelect($('pro-persona'));
+    const keep = $('persona').value;
+    fillPersonaSelect($('persona'), keep); fillPersonaSelect($('pro-persona')); fillPersonaSelect($('pe-pick'));
+    showPersonaForm();
   }
+  function showPersonaForm() {
+    const p = fbState.personas.find((x) => x.id === $('pe-pick').value);
+    if (!p) return;
+    $('pe-name').value = p.name; $('pe-instr').value = p.instructions; $('pe-voice').value = p.voice; $('pe-freq').value = p.frequency;
+    $('pe-save').disabled = p.builtin;
+    $('pe-msg').textContent = p.builtin ? 'Built-in personas are read-only. Save as new to make your own copy.' : 'Version ' + p.version;
+  }
+  $('pe-pick').addEventListener('change', showPersonaForm);
+  const personaBody = () => ({ name: $('pe-name').value, instructions: $('pe-instr').value, voice: $('pe-voice').value, frequency: $('pe-freq').value });
+  $('pe-new').addEventListener('click', async () => {
+    try { const r = await api('POST', '/api/personas', personaBody()); await loadPersonas(); $('pe-pick').value = r.id; showPersonaForm(); $('pe-msg').textContent = 'Saved as a new persona.'; }
+    catch (e) { $('pe-msg').textContent = e.message; }
+  });
+  $('pe-save').addEventListener('click', async () => {
+    try { const r = await api('PUT', '/api/personas/' + $('pe-pick').value, personaBody()); const id = $('pe-pick').value; await loadPersonas(); $('pe-pick').value = id; showPersonaForm(); $('pe-msg').textContent = 'Saved as version ' + r.version + '. Earlier feedback keeps the version that wrote it.'; }
+    catch (e) { $('pe-msg').textContent = e.message; }
+  });
   $('persona').addEventListener('change', () => state.current && api('PATCH', '/api/notes/' + state.current, { personaId: $('persona').value }).catch((e) => ($('fb-status').textContent = e.message)));
 
   $('get-fb').addEventListener('click', async () => {
@@ -338,6 +363,11 @@
       $('pro-state').textContent = fbState.proactive.enabled ? '(on)' : '(off)';
       $('pro-toggle').textContent = fbState.proactive.enabled ? 'Turn off' : 'Turn on';
     } catch (e) { $('pro-state').textContent = e.message; }
+  });
+
+  $('copy-md').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(bodyEl.value); setStatus('Copied as Markdown', 'ok'); }
+    catch (e) { bodyEl.focus(); bodyEl.select(); setStatus('Select all is ready. Press Ctrl+C to copy.', 'dirty'); }
   });
 
   refresh().catch((e) => setStatus(e.message, "dirty"));

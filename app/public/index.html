@@ -26,6 +26,7 @@
         <div class="bar">
           <input id="path" type="text" aria-label="Note path" spellcheck="false">
           <button id="rename" type="button" class="alt">Move</button>
+          <button id="copy-md" type="button" class="alt">Copy Markdown</button>
           <button id="delete" type="button" class="alt">Delete</button>
           <span id="status" class="status" role="status">Saved</span>
         </div>
@@ -66,6 +67,27 @@
               <button id="pro-toggle" type="button" class="alt">Turn on</button>
             </div>
             <p class="muted">When on, a note set to Proactive sends its text to the chosen model after you pause editing, at most every few minutes and ten runs a day. Quiet notes never send anything on their own.</p>
+          </details>
+          <details id="persona-box">
+            <summary>Personas</summary>
+            <div class="pe">
+              <div class="row"><label for="pe-pick">Edit</label><select id="pe-pick"></select></div>
+              <label for="pe-name">Name</label>
+              <input id="pe-name" type="text" maxlength="60">
+              <label for="pe-instr">Instructions</label>
+              <textarea id="pe-instr" rows="3" maxlength="2000" placeholder="How should this persona respond?"></textarea>
+              <div class="row">
+                <label for="pe-voice">Voice</label>
+                <select id="pe-voice"><option value="plain">Plain</option><option value="warm">Warm</option><option value="blunt">Blunt</option><option value="playful">Playful</option></select>
+                <label for="pe-freq">Speaks up</label>
+                <select id="pe-freq"><option value="rarely">Rarely</option><option value="when-it-matters">When it matters</option><option value="often">Often</option></select>
+              </div>
+              <div class="row">
+                <button id="pe-new" type="button">Save as new persona</button>
+                <button id="pe-save" type="button" class="alt">Save changes</button>
+                <span id="pe-msg" class="muted" role="status"></span>
+              </div>
+            </div>
           </details>
           <ul id="fb-list" class="fb-list"></ul>
         </section>

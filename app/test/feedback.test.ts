@@ -358,3 +358,58 @@ describe("proactive feedback", () => {
     assert.equal(out.reason, "cancelled");
   });
 });
+
+describe("persona voice, frequency and thread-to-note", () => {
+  it("validates voice and frequency and versions them", () => {
+    const { feedback } = setup();
+    assert.throws(() => feedback.createPersona({ name: "x", instructions: "y", voice: "shouty" }));
+    assert.throws(() => feedback.createPersona({ name: "x", instructions: "y", frequency: "constantly" }));
+    const p = feedback.createPersona({ name: "Calm", instructions: "Be calm.", voice: "warm", frequency: "rarely" });
+    assert.equal(feedback.cooldownFactor(p.id), 3);
+    feedback.updatePersona(p.id, { name: "Calm", instructions: "Be calm.", frequency: "often" });
+    const now = feedback.listPersonas().find((x) => x.id === p.id);
+    assert.deepEqual([now?.voice, now?.frequency, now?.version], ["warm", "often", 2]);
+    assert.equal(feedback.cooldownFactor(p.id), 0.5);
+  });
+
+  it("voice reaches the prompt and frequency stretches the proactive cooldown", async () => {
+    const { broker, feedback } = setup();
+    let seen = "";
+    reply = (system) => { seen = system; return JSON.stringify({ findings: [] }); };
+    const p = feedback.createPersona({ name: "Slow", instructions: "Be brief.", voice: "blunt", frequency: "rarely" });
+    await gen(feedback, { personaId: p.id });
+    assert.match(seen, /Voice: blunt\./);
+
+    const clock = new FakeClock();
+    const pro = new Proactive(store, feedback, broker, { debounceMs: 1000, cooldownMs: 10_000, minChars: 100, maxRunsPerDay: 5, now: clock.now, timers: clock.timers });
+    feedback.setProactive({ connectionId: "m", enabled: true, personaId: p.id });
+    store.setMeta(noteId, { assistMode: "proactive" });
+    pro.activity(noteId); clock.advance(1100); await new Promise((r) => setTimeout(r, 40));
+    const before = calls;
+    store.save(noteId, NOTE + "a", store.get(noteId).hash);
+    pro.activity(noteId);
+    clock.advance(20_000);
+    await new Promise((r) => setTimeout(r, 40));
+    assert.equal(calls, before, "rarely = 3x cooldown, so 20s is not enough");
+    clock.advance(15_000);
+    await new Promise((r) => setTimeout(r, 40));
+    assert.equal(calls, before + 1);
+  });
+
+  it("turns a feedback thread into a new note and leaves the source alone", async () => {
+    const { feedback } = setup();
+    await gen(feedback);
+    const id = (feedback.list(noteId)[0] as any).id;
+    reply = () => "More detail.";
+    await feedback.reply(id, { message: "Why?", connectionId: "m", requestId: nextId() });
+    const before = readFileSync(path.join(store.root, "bio.md"));
+    const made = feedback.toNote(id);
+    const again = feedback.toNote(id);
+    assert.notEqual(made.path, again.path);
+    const text = store.get(made.id).content;
+    assert.match(text, /> Mitochondria make DNA/);
+    assert.match(text, /\*\*You:\*\* Why\?/);
+    assert.match(text, /Source note: bio\.md/);
+    assert.equal(Buffer.compare(readFileSync(path.join(store.root, "bio.md")), before), 0);
+  });
+});

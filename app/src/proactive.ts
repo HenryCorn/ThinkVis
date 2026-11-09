@@ -71,7 +71,9 @@ export class Proactive {
     const s = this.state(noteId);
     if (s.timer) this.opts.timers.clear(s.timer);
     const sinceLast = s.lastRunAt === null ? Infinity : this.opts.now() - s.lastRunAt;
-    const delay = Math.max(this.opts.debounceMs, this.opts.cooldownMs - sinceLast);
+    const cfg = this.feedback.getProactive();
+    const factor = this.feedback.cooldownFactor(cfg.personaId ?? this.feedback.notePersonaId(noteId));
+    const delay = Math.max(this.opts.debounceMs, this.opts.cooldownMs * factor - sinceLast);
     s.timer = this.opts.timers.set(() => { s.timer = null; void this.run(noteId); }, delay);
     return "scheduled";
   }

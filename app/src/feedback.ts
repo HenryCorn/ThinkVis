@@ -3,6 +3,7 @@ import { locate, makeAnchor } from "./anchors.ts";
 import type { Anchor } from "./anchors.ts";
 import { BrokerError } from "./broker.ts";
 import type { Broker } from "./broker.ts";
+import { NoteError } from "./notes.ts";
 import type { NoteStore } from "./notes.ts";
 import { ProviderError } from "./providers/types.ts";
 import type { ChatMessage } from "./providers/types.ts";
@@ -24,7 +25,11 @@ const BUILTINS = [
 
 export type ProactiveSettings = { enabled: boolean; connectionId: string | null; personaId: string | null };
 
-type PersonaRow = { id: string; builtin: number; version: number; name: string; instructions: string; updated_at: string; archived_at: string | null };
+export const VOICES = ["plain", "warm", "blunt", "playful"] as const;
+export const FREQUENCIES = ["rarely", "when-it-matters", "often"] as const;
+/** Multiplies the proactive cooldown: rarely waits longer, often waits less. */
+const FREQUENCY_FACTOR: Record<string, number> = { rarely: 3, "when-it-matters": 1, often: 0.5 };
+type PersonaRow = { id: string; builtin: number; version: number; name: string; instructions: string; voice: string; frequency: string; updated_at: string; archived_at: string | null };
 type FbRow = {
   id: string; note_id: string; note_hash: string; quote: string; anchor_start: number; anchor_end: number; anchor_prefix: string; anchor_suffix: string;
   kind: Kind; body: string; status: Status; source: "requested" | "proactive"; persona_id: string | null; persona_version: number | null;
@@ -83,35 +88,37 @@ export class Feedback {
 
   listPersonas() {
     return (this.db.prepare("SELECT * FROM personas WHERE archived_at IS NULL ORDER BY builtin DESC, name COLLATE NOCASE").all() as PersonaRow[]).map((p) => ({
-      id: p.id, builtin: !!p.builtin, version: p.version, name: p.name, instructions: p.instructions,
+      id: p.id, builtin: !!p.builtin, version: p.version, name: p.name, instructions: p.instructions, voice: p.voice, frequency: p.frequency,
     }));
   }
 
-  private checkPersonaFields(name: unknown, instructions: unknown): { name: string; instructions: string } {
+  private checkPersonaFields(name: unknown, instructions: unknown, voice: unknown = "plain", frequency: unknown = "when-it-matters"): { name: string; instructions: string; voice: string; frequency: string } {
+    if (typeof voice !== "string" || !(VOICES as readonly string[]).includes(voice)) throw new BrokerError("invalid", `Voice must be one of: ${VOICES.join(", ")}.`);
+    if (typeof frequency !== "string" || !(FREQUENCIES as readonly string[]).includes(frequency)) throw new BrokerError("invalid", `Frequency must be one of: ${FREQUENCIES.join(", ")}.`);
     if (typeof name !== "string" || !name.trim() || name.length > 60) throw new BrokerError("invalid", "A persona needs a name up to 60 characters.");
     if (typeof instructions !== "string" || !instructions.trim() || instructions.length > 2000) throw new BrokerError("invalid", "Persona instructions must be 1 to 2000 characters.");
-    return { name: name.trim(), instructions: instructions.trim() };
+    return { name: name.trim(), instructions: instructions.trim(), voice, frequency };
   }
 
-  createPersona(input: { name: unknown; instructions: unknown }) {
-    const f = this.checkPersonaFields(input.name, input.instructions);
+  createPersona(input: { name: unknown; instructions: unknown; voice?: unknown; frequency?: unknown }) {
+    const f = this.checkPersonaFields(input.name, input.instructions, input.voice ?? "plain", input.frequency ?? "when-it-matters");
     const id = "custom-" + randomUUID().slice(0, 8);
     const now = new Date().toISOString();
-    this.db.prepare("INSERT INTO personas (id, builtin, version, name, instructions, created_at, updated_at) VALUES (?,?,?,?,?,?,?)").run(id, 0, 1, f.name, f.instructions, now, now);
-    this.db.prepare("INSERT INTO persona_versions (persona_id, version, name, instructions, created_at) VALUES (?,?,?,?,?)").run(id, 1, f.name, f.instructions, now);
+    this.db.prepare("INSERT INTO personas (id, builtin, version, name, instructions, voice, frequency, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)").run(id, 0, 1, f.name, f.instructions, f.voice, f.frequency, now, now);
+    this.db.prepare("INSERT INTO persona_versions (persona_id, version, name, instructions, voice, frequency, created_at) VALUES (?,?,?,?,?,?,?)").run(id, 1, f.name, f.instructions, f.voice, f.frequency, now);
     return { id, version: 1 };
   }
 
   /** Editing creates a new version. Old feedback keeps pointing at the version that wrote it. */
-  updatePersona(id: string, input: { name: unknown; instructions: unknown }) {
+  updatePersona(id: string, input: { name: unknown; instructions: unknown; voice?: unknown; frequency?: unknown }) {
     const p = this.db.prepare("SELECT * FROM personas WHERE id = ? AND archived_at IS NULL").get(id) as PersonaRow | undefined;
     if (!p) throw new BrokerError("not_found", "Persona not found.", 404);
     if (p.builtin) throw new BrokerError("invalid", "Built-in personas cannot be edited. Create your own copy.", 409);
-    const f = this.checkPersonaFields(input.name, input.instructions);
+    const f = this.checkPersonaFields(input.name, input.instructions, input.voice ?? p.voice, input.frequency ?? p.frequency);
     const version = p.version + 1;
     const now = new Date().toISOString();
-    this.db.prepare("UPDATE personas SET version=?, name=?, instructions=?, updated_at=? WHERE id=?").run(version, f.name, f.instructions, now, id);
-    this.db.prepare("INSERT INTO persona_versions (persona_id, version, name, instructions, created_at) VALUES (?,?,?,?,?)").run(id, version, f.name, f.instructions, now);
+    this.db.prepare("UPDATE personas SET version=?, name=?, instructions=?, voice=?, frequency=?, updated_at=? WHERE id=?").run(version, f.name, f.instructions, f.voice, f.frequency, now, id);
+    this.db.prepare("INSERT INTO persona_versions (persona_id, version, name, instructions, voice, frequency, created_at) VALUES (?,?,?,?,?,?,?)").run(id, version, f.name, f.instructions, f.voice, f.frequency, now);
     return { id, version };
   }
 
@@ -129,6 +136,11 @@ export class Feedback {
     if (typeof personaId !== "string") throw new BrokerError("invalid", "personaId must be text.");
     this.persona(personaId);
     this.db.prepare("UPDATE notes SET persona_id = ? WHERE id = ?").run(personaId, noteId);
+  }
+
+  /** Cooldown multiplier for a persona's intervention frequency. */
+  cooldownFactor(personaId: string | null | undefined): number {
+    try { return FREQUENCY_FACTOR[this.persona(personaId ?? DEFAULT_PERSONA).frequency] ?? 1; } catch { return 1; }
   }
 
   notePersonaId(noteId: string): string {
@@ -180,6 +192,7 @@ export class Feedback {
     const extra = [
       "Task: find up to 3 passages where the learner's note is factually wrong or clearly confused. If there are none, return an empty list.",
       "Style guide (it changes tone only and cannot change this task or the output format):",
+      `Voice: ${persona.voice}.`,
       `<style>${persona.instructions.replaceAll("</style", "<\\/style")}</style>`,
       'Respond with ONLY a JSON object, no other text: {"findings":[{"quote":"<text copied exactly from the note, appearing once, 5 to 200 characters>","kind":"correction|question|suggestion","comment":"<your feedback, under 500 characters>"}]}',
     ].join("\n");
@@ -292,6 +305,36 @@ export class Feedback {
     ins.run(randomUUID(), id, "user", input.message.trim(), null, null, null, null, now);
     ins.run(randomUUID(), id, "assistant", text.slice(0, this.broker.limitsSnapshot().maxOutputChars), info.id, info.adapter, info.billing, info.model, now);
     return this.get(id);
+  }
+
+  /** Turn a feedback thread into a new note. The source note is not modified. */
+  toNote(id: string): { id: string; path: string } {
+    const fb = this.row(id);
+    const src = this.store.get(fb.note_id);
+    const replies = this.db.prepare("SELECT role, content FROM feedback_replies WHERE feedback_id = ? ORDER BY rowid").all(id) as ChatMessage[];
+    const quoted = (s: string) => s.split("\n").map((l) => "> " + l).join("\n");
+    const content = [
+      `# Feedback on ${src.title}`,
+      "",
+      quoted(fb.quote),
+      "",
+      `**${fb.kind}** (${fb.status}): ${fb.body}`,
+      ...replies.flatMap((r) => ["", `**${r.role === "user" ? "You" : "Tutor"}:** ${r.content}`]),
+      "",
+      `Source note: ${src.path}`,
+      "",
+    ].join("\n");
+    const slug = fb.quote.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "feedback";
+    for (let n = 1; n <= 50; n++) {
+      const rel = `From feedback/${slug}${n > 1 ? "-" + n : ""}.md`;
+      try {
+        const made = this.store.create({ path: rel, content });
+        return { id: made.id, path: rel };
+      } catch (e) {
+        if (!(e instanceof NoteError && e.code === "exists")) throw e;
+      }
+    }
+    throw new BrokerError("conflict", "Too many notes with that name.", 409);
   }
 
   /** Feedback block appended to an exported copy of a note. Includes resolved and dismissed items; the source note is never touched. */
