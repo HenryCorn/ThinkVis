@@ -1,0 +1,21 @@
+## Latest page snapshot
+uid=1_0 RootWebArea "ThinkVis Research — Disposable | Riddled" url="https://www.riddled.ai/write"
+  uid=36_0 dialog "Settings" modal
+    uid=36_1 navigation "Settings sections"
+      uid=36_2 button "Customize Riddled"
+      uid=36_3 button "Riddlers"
+      uid=36_4 button "About you"
+      uid=36_5 button "Profile"
+      uid=36_6 button "Billing" focusable focused
+      uid=36_7 button "Help & support"
+    uid=36_8 button "Close settings"
+    uid=37_0 heading "Billing" level="2"
+    uid=37_1 "Free"
+    uid=37_2 "Your notes are always free to keep. Plus and Pro give Riddled more room."
+    uid=37_3 "Your free Riddled"
+    uid=37_4 "About 30 responses left"
+    uid=37_5 "Free doesn't refill. Plus keeps Riddled thinking with you."
+    uid=37_6 button "Plus, $9.99 a month"
+    uid=37_7 button "Pro, $19.99 a month"
+    uid=37_8 "Riddled runs on OpenAI's GPT-6.1 Sol: reading along, answering you and drawing. The same on every plan, Free included."
+

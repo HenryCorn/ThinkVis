@@ -1,0 +1,17 @@
+# Obsidian per-machine UI state
+vault/.obsidian/workspace*.json
+vault/.obsidian/cache/
+vault/.trash/
+
+# Runtime secrets and generated local state — never research evidence
+.env
+.env.*
+!.env.example
+*.har
+*.saz
+*.sqlite
+*.sqlite-*
+node_modules/
+
+# ThinkVis app runtime data (notes, SQLite, backups) — see Decision Log D019
+/app-data/

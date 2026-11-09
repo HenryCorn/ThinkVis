@@ -1,0 +1,77 @@
+{
+  "provenance": "Derived by primary researcher from Chrome DevTools request metadata. Not canonical REA Evidence. Credentials and raw payloads are deliberately omitted.",
+  "observations": [
+    {
+      "method": "POST",
+      "path": "/api/riddled",
+      "task": "note chat",
+      "status": 200,
+      "requestContentType": "application/json",
+      "responseContentType": "application/json",
+      "requestShape": {
+        "task": "string",
+        "messageId": "string",
+        "message": "string",
+        "noteId": "string",
+        "noteText": "string",
+        "voice": "string",
+        "images": "number",
+        "imageKeys": {
+          "array": 0,
+          "item": null
+        },
+        "timeZone": "string",
+        "near": "string"
+      },
+      "responseShape": {
+        "said": "boolean",
+        "message": {
+          "id": "string",
+          "text": "string"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/riddled",
+      "task": "proactive feedback",
+      "status": 200,
+      "requestContentType": "application/json",
+      "responseContentType": "application/json",
+      "requestShape": {
+        "task": "string",
+        "target": "string",
+        "thoughtId": "string",
+        "noteId": "string",
+        "noteText": "string",
+        "voice": "string",
+        "images": "number",
+        "imageKeys": {
+          "array": 0,
+          "item": null
+        },
+        "timeZone": "string"
+      },
+      "responseShape": {
+        "said": "boolean",
+        "thought": {
+          "id": "string",
+          "kind": "string",
+          "quote": "string",
+          "message": {
+            "id": "string",
+            "text": "string"
+          },
+          "riddlerId": "null in this response",
+          "riddlerVersionId": "null in this response"
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Only two selected requests inspected; no exhaustive network census.",
+    "JSON response and word-by-word UI reveal do not establish end-to-end network streaming.",
+    "Field names alone do not prove their server-side semantics, validation, storage, or privacy.",
+    "No authorization headers, cookies, full request payloads, or credential values retained."
+  ]
+}

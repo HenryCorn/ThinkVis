@@ -1,0 +1,53 @@
+## Latest page snapshot
+uid=1_0 RootWebArea "ThinkVis Research — Disposable | Riddled" url="https://www.riddled.ai/write"
+  uid=26_0 dialog "Settings" modal
+    uid=26_1 navigation "Settings sections"
+      uid=26_2 button "Customize Riddled" focusable focused
+      uid=26_3 button "Riddlers"
+      uid=26_4 button "About you"
+      uid=26_5 button "Profile"
+      uid=26_6 button "Billing"
+      uid=26_7 button "Help & support"
+    uid=26_8 button "Close settings"
+    uid=26_9 heading "Customize Riddled" level="2"
+    uid=26_10 region "New notes start in"
+      uid=26_11 "New notes start in"
+      uid=26_12 radio "Thinks with you" checked
+      uid=26_13 radio "When you ask"
+      uid=26_14 "Change any note on its own, from the row above its title."
+    uid=26_15 "Ink from the pointer"
+    uid=26_16 "Now and then a drop of ink falls as you move the pointer, then dries and fades."
+    uid=26_17 switch "Ink from the pointer" description="Now and then a drop of ink falls as you move the pointer, then dries and fades."
+    uid=26_18 region "Reading pace"
+      uid=26_19 "Reading pace"
+      uid=26_20 radio "Regular" checked
+      uid=26_21 radio "Slow"
+    uid=26_22 region "Where questions appear"
+      uid=26_23 "Where questions appear"
+      uid=26_24 radio "Both margins" checked
+      uid=26_25 radio "Right margin"
+      uid=26_26 radio "Marks only"
+    uid=26_27 region "Appearance"
+      uid=26_28 "Appearance"
+      uid=26_29 radio "System" checked
+      uid=26_30 radio "Light"
+      uid=26_31 radio "Dark"
+    uid=26_32 region "Text size"
+      uid=26_33 "Text size"
+      uid=26_34 radio "Small"
+      uid=26_35 radio "Default" checked
+      uid=26_36 radio "Large"
+    uid=26_37 region "Riddled's lettering"
+      uid=26_38 "Riddled's lettering"
+      uid=26_39 radio "Riddled's own" checked
+      uid=26_40 radio "Like your notes"
+    uid=26_41 region "Riddled's colour"
+      uid=26_42 "Riddled's colour"
+      uid=26_43 radio "Ink" checked
+      uid=26_44 radio "Blue"
+      uid=26_45 radio "Green"
+      uid=26_46 radio "Red"
+      uid=26_47 radio "Purple"
+      uid=26_48 radio "Brown"
+      uid=26_49 radio "Orange"
+

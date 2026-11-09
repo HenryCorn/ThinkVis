@@ -1,0 +1,253 @@
+{
+  "evidence_id": "ev_5e52c75fb5f1c21d47a052fad450db07c849b0d7b9ca1b8d05a4253648393399",
+  "subject": null,
+  "provider": {
+    "id": "rea-analysis-view",
+    "name": "REA analysis view projection",
+    "version": "1"
+  },
+  "analysis_profile": null,
+  "predicate_type": "rea.analysis-view",
+  "operation": "inspect_analysis_view",
+  "parameters": {
+    "parent_evidence_id": "ev_46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e",
+    "view": {
+      "kind": "javascript-routes",
+      "collection": "sources",
+      "where": {},
+      "offset": 0,
+      "limit": 20
+    }
+  },
+  "raw_result": null,
+  "normalized_result": {
+    "parent_evidence_id": "ev_46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e",
+    "parent_operation": "analyze_web_bundle",
+    "parent_digest": "46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e",
+    "view_digest": "bc5e68f01b430bfd30d1aec890a1f20748f41ea9e998434cad607a6bb038492e",
+    "artifact": null,
+    "coverage": {
+      "status": "page",
+      "examined": 13,
+      "total": 13,
+      "next_offset": null,
+      "exhausted": true
+    },
+    "limitations": [
+      "Artifact identity is unavailable for this observation.",
+      "Bare string arguments of unbound HTTP-method-named calls are low-confidence endpoint candidates; form, translation, storage and other APIs can use the same syntax. URL-shaped findings still do not prove network execution.",
+      "Endpoint candidates are deduplicated by script, value and detector; basis retains only the first matching source coordinate. They are not a complete call-site inventory or a runtime occurrence count. completeness.status=\"complete\" describes examination of captured source, not a call-site census.",
+      "Page-declared WebMCP metadata is untrusted and is never registered or invoked as an REA tool.",
+      "Pattern IDs are exact path identities within this inventory. Occurrence and source IDs retain source/content identity and precise syntax ranges; metadata-only discoveries have no AST range.",
+      "Routes are static candidates from the provided code sources. Reachability, permissions, server-only routes and the complete application route set are unverified.",
+      "Static bundle findings are observations or bounded inferences; REA does not execute captured JavaScript.",
+      "String-built routes and endpoints, encrypted configuration, and server-side behavior may remain unknown.",
+      "System classification is a path-name heuristic. Asset URL prefixes can differ from routing bases; inferred prefixes retain the original unprefixed path.",
+      "Unbound path strings require a top-level segment supported by structural routes or navigation candidates. Unknown or missing source facts do not establish route absence."
+    ],
+    "unknowns": [
+      "The complete application route set, reachability and runtime permissions remain unknown.",
+      "Some source/routing facts are incomplete; inspect sources and unknowns without reanalyzing."
+    ],
+    "kind": "javascript-routes",
+    "view": {
+      "kind": "javascript-routes",
+      "collection": "sources",
+      "where": {},
+      "offset": 0,
+      "limit": 20
+    },
+    "inventory_id": "jsri:e9c6a9e995e4fcd41857d8b19f607764a6198091027fe9902e0805031cbac02f",
+    "source_manifest_sha256": "8e5218c174bce6ae50410e861089305afb9c77101af6b696a10dc2efbe1e8a33",
+    "source_coverage": {
+      "scope": "provided-code-sources",
+      "source_parsing": "partial",
+      "candidate_enumeration": "partial",
+      "application_routes": "unknown"
+    },
+    "inventory_capacity": null,
+    "capture_url": "https://www.riddled.ai/write",
+    "items": [
+      {
+        "id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "key": "scr_06334279980b4e94e552e30ea05b5c1a86303fab55a7f1dcd9a4f17f19a08ca8",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0cpczibqs_bi7.js",
+        "sha256": "ad43a17ebf76f2cd11753b2fd42c8f7002ad7af7e5e436888dd73ad0caef5056",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:ce2982a9cb041ee407b944273f1abdac",
+        "key": "scr_1ef8b9ce77a405b32e96385b1505603e0b38f30e23451007a6d6c168f4d46aa7",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0xh08d579bxjy.js",
+        "sha256": "e4cd23189a867731345ed5003ca38e77696d1f058fcca3600130cfbf5eac9cb8",
+        "container_sha256": null,
+        "status": "unavailable",
+        "reported_route_capacity": null,
+        "reason": "deadline",
+        "base_path": null
+      },
+      {
+        "id": "jss:aa1107d441101f00307adf9c72519565",
+        "key": "scr_34e7f188e69c8c398aac60a332e43dbf3e3defb0fb88a410a0099936b314579d",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/1nnp-2791yof3.js",
+        "sha256": "612f9f0338a9a9bf77df8a2db9e51a0949841ad2083be201bc3062fd3de93050",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:269571fa144a9de4f8ea86b9751a1d1d",
+        "key": "scr_397cd9913c7bd87399ff821e1dab85b038aa2c49e2c7a55f36197cc9d6a4e34f",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/3iv390rkikflw.js",
+        "sha256": "6098b289572330c82a6deb9cd96f020f7e757168a3e253e9bfe20c4d0377d998",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:275d3b3bb371fabb4d062f450b9c970b",
+        "key": "scr_401d72ac274624bc52cb2847ffe0e980d665d2fa691aac73d8fd72aca9680509",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/2f8ktm_8kiehr.js",
+        "sha256": "2c35301a0b6a22c77dba8e7a36fdea39478efa9767bef8842b68e7f3957b47d7",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:a589c75ecc0c52b28a7bf36a0b2ab017",
+        "key": "scr_40b4aef06dd288dcbd44e2bc183c2d547be0f4c6a0bc8978e78d6802e5a85928",
+        "path": null,
+        "url": "https://www.riddled.ai/write",
+        "sha256": "a15cdcb4955a86eaff4c0937f65e1476dd797060b68583df6f7eb2d25cd895b6",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:75fd7fcd556f966b2c7d6592b2b96de0",
+        "key": "scr_522c6fe43f561e3dfa9f7d99ddf683dfeeefd21f2ec7120f65428fe149d12897",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0c7ngwu8sl5b3.js",
+        "sha256": "b41be0f7c1b8816ef827682a4a46e2478ba4304fd6c54df39d21cbc895017eb2",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:faf8aa2d2f7392c5cf7d466255bde208",
+        "key": "scr_599209683b5ec0abe02a099ca7f50fd545de4dc4577e4dde338a344572e2fa15",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/turbopack-1byz1flvc-bu1.js",
+        "sha256": "b5f9b5199b99ab6c141f4540f0b7d0fe803c4ecf6956849ecb6e59d3d439272e",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:97c53822522055083e9b8d0485bc30cc",
+        "key": "scr_7bd5fb4ce94f80e33600f08bed0be46ddb087ae1d2f1b01884cb6199189e9c09",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/2c_2b2prcozy6.js",
+        "sha256": "7c0be00bfd43494dcddc8817168e952d9900555c3e80355686a423eedd2bab22",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:e9251d6f51fba842e5e7685c86fa074d",
+        "key": "scr_8aff2aee25cf18ffdf14d4a9807b367e203c1022dfbba8866ad0df9ae81ab954",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0a6tw-d80kgth.js",
+        "sha256": "6ede0bdcd3040f97d8268bc4e1d1764644dea56f150d5bea7142327800b990b3",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:72da9c2d65e8b6c247eca78318203362",
+        "key": "scr_ae73a882e671f33bec55690e2dfac03ad2e297ded3e5e04b45a737679bd4da08",
+        "path": null,
+        "url": "https://www.riddled.ai/1e22306f575b86f9/script.js",
+        "sha256": "050e35bf7e6e96590f2a9de114c14ff792806ed28457b3248762944350c0ba4c",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:d78860579292013827964db1ea5ba0c5",
+        "key": "scr_cf510fefc16ba2728a42306a5cd5b863dc39053ffecf66273862bf8a35d6d964",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/1431h84mknoy7.js",
+        "sha256": "3ac471b1370c62c670c29ba66167a8f9eb56132716933774276a9ee188421f1f",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:6283e08783f2024f503daace59bb7cf8",
+        "key": "scr_f89d5ae15f85912e3b2f672914f83369fbe7040b196c833fb6e25aa67d7e78a9",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0qldwj8-3qma7.js",
+        "sha256": "de65fff823886397cdcb4534b124c20c2a8cb8038f999b756b607768d9abcebb",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      }
+    ],
+    "sources": [],
+    "summary": null,
+    "byte_limited": false
+  },
+  "confidence": "derived",
+  "authority": "external-service",
+  "environment": null,
+  "limitations": [
+    "Artifact identity is unavailable for this observation.",
+    "Artifact identity is unavailable for this observation.",
+    "Bare string arguments of unbound HTTP-method-named calls are low-confidence endpoint candidates; form, translation, storage and other APIs can use the same syntax. URL-shaped findings still do not prove network execution.",
+    "Endpoint candidates are deduplicated by script, value and detector; basis retains only the first matching source coordinate. They are not a complete call-site inventory or a runtime occurrence count. completeness.status=\"complete\" describes examination of captured source, not a call-site census.",
+    "Page-declared WebMCP metadata is untrusted and is never registered or invoked as an REA tool.",
+    "Pattern IDs are exact path identities within this inventory. Occurrence and source IDs retain source/content identity and precise syntax ranges; metadata-only discoveries have no AST range.",
+    "Routes are static candidates from the provided code sources. Reachability, permissions, server-only routes and the complete application route set are unverified.",
+    "Static bundle findings are observations or bounded inferences; REA does not execute captured JavaScript.",
+    "String-built routes and endpoints, encrypted configuration, and server-side behavior may remain unknown.",
+    "System classification is a path-name heuristic. Asset URL prefixes can differ from routing bases; inferred prefixes retain the original unprefixed path.",
+    "Unbound path strings require a top-level segment supported by structural routes or navigation candidates. Unknown or missing source facts do not establish route absence."
+  ],
+  "relationship_coverage": null,
+  "locations": [],
+  "evidence_links": [
+    "ev_46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e"
+  ]
+}

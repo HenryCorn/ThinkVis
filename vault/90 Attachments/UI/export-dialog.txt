@@ -1,0 +1,14 @@
+## Latest page snapshot
+uid=1_0 RootWebArea "ThinkVis Research — Disposable | Riddled" url="https://www.riddled.ai/write"
+  uid=45_0 dialog "Export ThinkVis Research — Disposable" modal
+    uid=45_1 form
+      uid=45_2 heading "Export “ThinkVis Research — Disposable”" level="2"
+      uid=45_3 radio "PDF"
+      uid=45_4 radio "Word"
+      uid=45_5 radio "Markdown" checked focusable focused
+      uid=45_6 "Include the riddles"
+      uid=45_7 "The riddle sits at the end, each under the words it's about."
+      uid=45_8 switch "Include the riddles" checked description="The riddle sits at the end, each under the words it's about."
+      uid=45_9 button "Cancel"
+      uid=45_10 button "Export Markdown"
+

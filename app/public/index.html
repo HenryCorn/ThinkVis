@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThinkVis</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">ThinkVis</div>
+      <label class="sr" for="search">Search notes</label>
+      <input id="search" type="search" placeholder="Search notes" autocomplete="off">
+      <div class="row">
+        <button id="new-note" type="button">New note</button>
+        <button id="new-folder" type="button" class="alt">New folder</button>
+      </div>
+      <nav id="tree" aria-label="Notes"></nav>
+      <button id="export" type="button" class="alt">Export Markdown</button>
+      <p id="export-msg" class="muted" role="status"></p>
+    </aside>
+    <main class="main">
+      <div id="empty" class="empty">Select a note, or create one.</div>
+      <section id="editor" hidden>
+        <div class="bar">
+          <input id="path" type="text" aria-label="Note path" spellcheck="false">
+          <button id="rename" type="button" class="alt">Move</button>
+          <button id="delete" type="button" class="alt">Delete</button>
+          <span id="status" class="status" role="status">Saved</span>
+        </div>
+        <div id="conflict" class="conflict" hidden>
+          <p>This note changed on disk after you opened it. Your edits are not saved.</p>
+          <div class="row">
+            <button id="keep-mine" type="button">Keep mine and overwrite</button>
+            <button id="take-disk" type="button" class="alt">Load disk version</button>
+          </div>
+        </div>
+        <div class="meta">
+          <label for="purpose">Note purpose</label>
+          <input id="purpose" type="text" maxlength="2000" placeholder="What is this note for?">
+          <label for="mode">Assistance</label>
+          <select id="mode">
+            <option value="quiet">Quiet</option>
+            <option value="proactive">Proactive</option>
+          </select>
+        </div>
+        <label class="sr" for="body">Note text</label>
+        <textarea id="body" spellcheck="true"></textarea>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "thinkvis-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ThinkVis local notebook. Phase 1: notes without AI.",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "start": "node src/server.ts",
+    "test": "node --test --test-reporter=spec \"test/*.test.ts\""
+  }
+}

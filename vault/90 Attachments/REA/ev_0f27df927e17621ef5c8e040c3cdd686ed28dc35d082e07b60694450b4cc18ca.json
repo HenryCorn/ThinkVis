@@ -1,0 +1,665 @@
+{
+  "evidence_id": "ev_0f27df927e17621ef5c8e040c3cdd686ed28dc35d082e07b60694450b4cc18ca",
+  "subject": null,
+  "provider": {
+    "id": "rea-analysis-view",
+    "name": "REA analysis view projection",
+    "version": "1"
+  },
+  "analysis_profile": null,
+  "predicate_type": "rea.analysis-view",
+  "operation": "inspect_analysis_view",
+  "parameters": {
+    "parent_evidence_id": "ev_46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e",
+    "view": {
+      "kind": "javascript-routes",
+      "collection": "unknowns",
+      "where": {},
+      "offset": 0,
+      "limit": 20
+    }
+  },
+  "raw_result": null,
+  "normalized_result": {
+    "parent_evidence_id": "ev_46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e",
+    "parent_operation": "analyze_web_bundle",
+    "parent_digest": "46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e",
+    "view_digest": "06b45f87f883226bb3d3bf14280955d8c75ca9180a641d7d7ed2d2dfbb004637",
+    "artifact": null,
+    "coverage": {
+      "status": "page",
+      "examined": 17,
+      "total": 17,
+      "next_offset": null,
+      "exhausted": true
+    },
+    "limitations": [
+      "Artifact identity is unavailable for this observation.",
+      "Bare string arguments of unbound HTTP-method-named calls are low-confidence endpoint candidates; form, translation, storage and other APIs can use the same syntax. URL-shaped findings still do not prove network execution.",
+      "Endpoint candidates are deduplicated by script, value and detector; basis retains only the first matching source coordinate. They are not a complete call-site inventory or a runtime occurrence count. completeness.status=\"complete\" describes examination of captured source, not a call-site census.",
+      "Page-declared WebMCP metadata is untrusted and is never registered or invoked as an REA tool.",
+      "Pattern IDs are exact path identities within this inventory. Occurrence and source IDs retain source/content identity and precise syntax ranges; metadata-only discoveries have no AST range.",
+      "Routes are static candidates from the provided code sources. Reachability, permissions, server-only routes and the complete application route set are unverified.",
+      "Static bundle findings are observations or bounded inferences; REA does not execute captured JavaScript.",
+      "String-built routes and endpoints, encrypted configuration, and server-side behavior may remain unknown.",
+      "System classification is a path-name heuristic. Asset URL prefixes can differ from routing bases; inferred prefixes retain the original unprefixed path.",
+      "Unbound path strings require a top-level segment supported by structural routes or navigation candidates. Unknown or missing source facts do not establish route absence."
+    ],
+    "unknowns": [
+      "The complete application route set, reachability and runtime permissions remain unknown.",
+      "Some source/routing facts are incomplete; inspect sources and unknowns without reanalyzing."
+    ],
+    "kind": "javascript-routes",
+    "view": {
+      "kind": "javascript-routes",
+      "collection": "unknowns",
+      "where": {},
+      "offset": 0,
+      "limit": 20
+    },
+    "inventory_id": "jsri:e9c6a9e995e4fcd41857d8b19f607764a6198091027fe9902e0805031cbac02f",
+    "source_manifest_sha256": "8e5218c174bce6ae50410e861089305afb9c77101af6b696a10dc2efbe1e8a33",
+    "source_coverage": {
+      "scope": "provided-code-sources",
+      "source_parsing": "partial",
+      "candidate_enumeration": "partial",
+      "application_routes": "unknown"
+    },
+    "inventory_capacity": null,
+    "capture_url": "https://www.riddled.ai/write",
+    "items": [
+      {
+        "id": "jsg:c6f278937ce72bad8c79c47c4166a219",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 83,
+            "column": 10312
+          },
+          "end": {
+            "line": 83,
+            "column": 10326
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 83,
+              "column": 10312
+            },
+            "end": {
+              "line": 83,
+              "column": 10326
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:7771c719f6ddf97029d8e39abde1f5d1",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 83,
+            "column": 10469
+          },
+          "end": {
+            "line": 83,
+            "column": 10492
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 83,
+              "column": 10469
+            },
+            "end": {
+              "line": 83,
+              "column": 10492
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:216b3c42e252c3d594ff09ad9563d9e0",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 10980
+          },
+          "end": {
+            "line": 86,
+            "column": 10981
+          }
+        },
+        "reason": "The navigation destination may be dynamic, mutated, projected or cyclic.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 10980
+            },
+            "end": {
+              "line": 86,
+              "column": 10981
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:5f81b10070557757e89a9ff3e7709b09",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 11047
+          },
+          "end": {
+            "line": 86,
+            "column": 11077
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 11047
+            },
+            "end": {
+              "line": 86,
+              "column": 11077
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:209c9c07948c08dbbe39512bc6c66cf3",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 12575
+          },
+          "end": {
+            "line": 86,
+            "column": 12625
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 12575
+            },
+            "end": {
+              "line": 86,
+              "column": 12625
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:ce0ace44643add74a8685c5980ba86bd",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 13397
+          },
+          "end": {
+            "line": 86,
+            "column": 13399
+          }
+        },
+        "reason": "The relative or unsupported navigation literal cannot establish a rooted path without runtime context.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 13397
+            },
+            "end": {
+              "line": 86,
+              "column": 13399
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:b863be92006182d88cd1796a5eaf47f3",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 13505
+          },
+          "end": {
+            "line": 86,
+            "column": 13511
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 13505
+            },
+            "end": {
+              "line": 86,
+              "column": 13511
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:2b1f991b60ec638cd0f3998f27d96bc3",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 13796
+          },
+          "end": {
+            "line": 86,
+            "column": 13797
+          }
+        },
+        "reason": "The navigation destination may be dynamic, mutated, projected or cyclic.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 13796
+            },
+            "end": {
+              "line": 86,
+              "column": 13797
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:919eb4f2fc493d2b961f8fd77ab3a34c",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 14068
+          },
+          "end": {
+            "line": 86,
+            "column": 14069
+          }
+        },
+        "reason": "The navigation destination may be dynamic, mutated, projected or cyclic.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 14068
+            },
+            "end": {
+              "line": 86,
+              "column": 14069
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:dccb8ede22658f521e7bcf3832a76bc1",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 15263
+          },
+          "end": {
+            "line": 86,
+            "column": 15269
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 15263
+            },
+            "end": {
+              "line": 86,
+              "column": 15269
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:dab2ed26829199473f4f1d11f0211758",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 16120
+          },
+          "end": {
+            "line": 86,
+            "column": 16150
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 16120
+            },
+            "end": {
+              "line": 86,
+              "column": 16150
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:ef50d837f098b55d4e468df6e96f7834",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 18407
+          },
+          "end": {
+            "line": 86,
+            "column": 18413
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 18407
+            },
+            "end": {
+              "line": 86,
+              "column": 18413
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:cc5808e3c55b4cca0e9b010fd9709e55",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 19681
+          },
+          "end": {
+            "line": 86,
+            "column": 19687
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 19681
+            },
+            "end": {
+              "line": 86,
+              "column": 19687
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:b5bfcf81efd39ac6f2b4e6b24b8d8f2f",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 78589
+          },
+          "end": {
+            "line": 86,
+            "column": 78594
+          }
+        },
+        "reason": "The recognized navigation destination is not a supported literal.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 78589
+            },
+            "end": {
+              "line": 86,
+              "column": 78594
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:885bc1acf8794028c91bd37392cc25f7",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 169515
+          },
+          "end": {
+            "line": 86,
+            "column": 169517
+          }
+        },
+        "reason": "The navigation destination may be dynamic, mutated, projected or cyclic.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 169515
+            },
+            "end": {
+              "line": 86,
+              "column": 169517
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:2dd1646b942afc5823ffb3d5996bc4c1",
+        "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "kind": "interpretation",
+        "source_range": {
+          "start": {
+            "line": 86,
+            "column": 169785
+          },
+          "end": {
+            "line": 86,
+            "column": 169787
+          }
+        },
+        "reason": "The navigation destination may be dynamic, mutated, projected or cyclic.",
+        "provenance": {
+          "source_id": "jss:3a9df544555983e02570f26b22f5fc54",
+          "occurrence_id": null,
+          "source_range": {
+            "start": {
+              "line": 86,
+              "column": 169785
+            },
+            "end": {
+              "line": 86,
+              "column": 169787
+            }
+          },
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      },
+      {
+        "id": "jsg:405980f8a94c136fa19988ae3d6515b9",
+        "source_id": "jss:ce2982a9cb041ee407b944273f1abdac",
+        "kind": "source-unavailable",
+        "source_range": null,
+        "reason": "deadline",
+        "provenance": {
+          "source_id": "jss:ce2982a9cb041ee407b944273f1abdac",
+          "occurrence_id": null,
+          "source_range": null,
+          "mechanism": null,
+          "derivation": null,
+          "inferred_base_path": null
+        }
+      }
+    ],
+    "sources": [
+      {
+        "id": "jss:3a9df544555983e02570f26b22f5fc54",
+        "key": "scr_06334279980b4e94e552e30ea05b5c1a86303fab55a7f1dcd9a4f17f19a08ca8",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0cpczibqs_bi7.js",
+        "sha256": "ad43a17ebf76f2cd11753b2fd42c8f7002ad7af7e5e436888dd73ad0caef5056",
+        "container_sha256": null,
+        "status": "complete",
+        "reported_route_capacity": null,
+        "reason": null,
+        "base_path": null
+      },
+      {
+        "id": "jss:ce2982a9cb041ee407b944273f1abdac",
+        "key": "scr_1ef8b9ce77a405b32e96385b1505603e0b38f30e23451007a6d6c168f4d46aa7",
+        "path": null,
+        "url": "https://www.riddled.ai/_next/static/immutable/chunks/0xh08d579bxjy.js",
+        "sha256": "e4cd23189a867731345ed5003ca38e77696d1f058fcca3600130cfbf5eac9cb8",
+        "container_sha256": null,
+        "status": "unavailable",
+        "reported_route_capacity": null,
+        "reason": "deadline",
+        "base_path": null
+      }
+    ],
+    "summary": null,
+    "byte_limited": false
+  },
+  "confidence": "derived",
+  "authority": "external-service",
+  "environment": null,
+  "limitations": [
+    "Artifact identity is unavailable for this observation.",
+    "Artifact identity is unavailable for this observation.",
+    "Bare string arguments of unbound HTTP-method-named calls are low-confidence endpoint candidates; form, translation, storage and other APIs can use the same syntax. URL-shaped findings still do not prove network execution.",
+    "Endpoint candidates are deduplicated by script, value and detector; basis retains only the first matching source coordinate. They are not a complete call-site inventory or a runtime occurrence count. completeness.status=\"complete\" describes examination of captured source, not a call-site census.",
+    "Page-declared WebMCP metadata is untrusted and is never registered or invoked as an REA tool.",
+    "Pattern IDs are exact path identities within this inventory. Occurrence and source IDs retain source/content identity and precise syntax ranges; metadata-only discoveries have no AST range.",
+    "Routes are static candidates from the provided code sources. Reachability, permissions, server-only routes and the complete application route set are unverified.",
+    "Static bundle findings are observations or bounded inferences; REA does not execute captured JavaScript.",
+    "String-built routes and endpoints, encrypted configuration, and server-side behavior may remain unknown.",
+    "System classification is a path-name heuristic. Asset URL prefixes can differ from routing bases; inferred prefixes retain the original unprefixed path.",
+    "Unbound path strings require a top-level segment supported by structural routes or navigation candidates. Unknown or missing source facts do not establish route absence."
+  ],
+  "relationship_coverage": null,
+  "locations": [],
+  "evidence_links": [
+    "ev_46da71ec0e190b573c986e90fdcd2b2c2459b010c075415009778677f6910a5e"
+  ]
+}
