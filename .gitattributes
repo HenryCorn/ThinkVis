@@ -1,0 +1,5 @@
+# Keep LF everywhere so hashes and REA records verify on any checkout
+* text=auto eol=lf
+# Evidence is byte-exact; never normalize it
+vault/90[[:space:]]Attachments/** -text
+docs/research/riddled/*.json -text
