@@ -103,7 +103,7 @@
       const n = await api("GET", "/api/notes/" + id);
       clearConflict();
       state.current = id; state.baseHash = n.hash; state.dirty = false;
-      bodyEl.value = n.content; pathEl.value = n.path;
+      bodyEl.value = n.content; pathEl.value = n.path; renderNoteDiagrams();
       $("purpose").value = n.purpose; $("mode").value = n.assistMode;
       $("empty").hidden = true; $("editor").hidden = false;
       setStatus(n.externallyChanged ? "Reloaded: changed on disk" : "Saved", "ok");
@@ -111,7 +111,19 @@
     } catch (e) { setStatus(e.message, "dirty"); await refresh(); }
   }
 
-  bodyEl.addEventListener("input", () => { state.dirty = true; setStatus("Unsaved changes", "dirty"); schedule(); });
+  let diagTimer = null;
+  function renderNoteDiagrams() {
+    const box = $("note-diagrams");
+    const parts = window.ThinkVisDiagram.splitFences(bodyEl.value).filter((p) => p.type === "diagram");
+    box.textContent = "";
+    box.hidden = !parts.length;
+    if (!parts.length) return;
+    box.appendChild(el("strong", "", "Diagrams in this note"));
+    const fence = "`".repeat(3);
+    box.appendChild(window.ThinkVisDiagram.richContent(document, parts.map((p) => fence + "mermaid\n" + p.text + "\n" + fence).join("\n")));
+  }
+  function scheduleDiagrams() { clearTimeout(diagTimer); diagTimer = setTimeout(renderNoteDiagrams, 400); }
+  bodyEl.addEventListener("input", () => { scheduleDiagrams(); state.dirty = true; setStatus("Unsaved changes", "dirty"); schedule(); });
   window.addEventListener("beforeunload", (ev) => { if (state.dirty) { ev.preventDefault(); ev.returnValue = ""; } });
 
   $("new-note").addEventListener("click", async () => {
@@ -173,7 +185,7 @@
   function addMessage(m) {
     const li = el('li', m.role);
     li.appendChild(el('span', 'tag', m.role === 'user' ? 'You' : tagFor(m)));
-    li.appendChild(document.createTextNode(m.content));
+    li.appendChild(window.ThinkVisDiagram.richContent(document, m.content));
     threadEl.appendChild(li);
     threadEl.scrollTop = threadEl.scrollHeight;
   }
@@ -256,7 +268,7 @@
       head.appendChild(el('span', 'badge', f.status));
       li.appendChild(head);
       li.appendChild(el('blockquote', 'fb-quote', f.quote));
-      li.appendChild(el('p', 'fb-body', f.body));
+      { const p = el('p', 'fb-body'); p.appendChild(window.ThinkVisDiagram.richContent(document, f.body)); li.appendChild(p); }
       li.appendChild(el('p', 'tag', (f.provider.model || '') + ' · ' + (f.persona ? f.persona.id + ' v' + f.persona.version : '') + ' · ' + f.source));
       const row = el('div', 'row');
       if (f.position.start !== null) {
@@ -284,7 +296,7 @@
     const old = li.querySelector('.fb-thread');
     if (old) { old.remove(); return; }
     const box = el('div', 'fb-thread');
-    try { (await api('GET', '/api/feedback/' + f.id)).thread.forEach((m) => { const p = el('p', 'fb-reply ' + m.role, ''); p.appendChild(el('span', 'tag', m.role === 'user' ? 'You' : (m.model || ''))); p.appendChild(document.createTextNode(m.content)); box.appendChild(p); }); } catch (e) { /* ignore */ }
+    try { (await api('GET', '/api/feedback/' + f.id)).thread.forEach((m) => { const p = el('p', 'fb-reply ' + m.role, ''); p.appendChild(el('span', 'tag', m.role === 'user' ? 'You' : (m.model || ''))); p.appendChild(window.ThinkVisDiagram.richContent(document, m.content)); box.appendChild(p); }); } catch (e) { /* ignore */ }
     const ta = document.createElement('textarea'); ta.rows = 2; ta.setAttribute('aria-label', 'Reply'); ta.placeholder = 'Reply to this feedback';
     const send = el('button', '', 'Send reply'); send.type = 'button';
     const msg = el('span', 'muted', '');

@@ -5,7 +5,7 @@ Local Markdown notebook with note-scoped chat through a provider broker. No npm 
 ```
 cd app
 npm start        # prints http://127.0.0.1:4317/?token=...  Open that link once.
-npm test         # 73 tests
+npm test         # 81 tests
 ```
 
 Environment: `THINKVIS_DATA` (default `../app-data`, git-ignored), `THINKVIS_PORT` (default 4317).
@@ -39,5 +39,17 @@ Behavior: the note text plus your message is sent only when you press Send (the 
 - **Proactive feedback** is off by default, needs a chosen connection, and only acts on notes set to Proactive. It waits for a quiet period, a per-note cooldown and a daily cap, requires the note to have changed, and rechecks everything before each outbound attempt. Switching a note to Quiet, or turning the switch off, cancels queued work and aborts an in-flight request. Text already sent cannot be recalled.
 - Markdown export appends a Feedback section (resolved and dismissed included) to the exported copy only.
 
+## Diagrams
+Instead of generating pictures, a diagram is plain text the app parses and draws itself. Write or ask for a fenced block marked `mermaid`:
+
+    flowchart LR
+    A[Sunlight] --> B(Chloroplast)
+    B -->|makes| C{Sugar?}
+    C -.->|no| A
+
+It is a strict subset of Mermaid flowcharts: `flowchart TD|LR`, nodes `[rect]`, `(rounded)`, `{decision}`, connections `-->`, `---`, `-.->`, `==>` with optional `|label|`, at most 40 nodes. Diagrams show under the editor as you type, and in chat and feedback replies. Anything outside the subset (subgraphs, styling, other diagram types) is reported with the reason and shown as source, never guessed at. Labels are only ever inserted as text. The tutor prompt tells models this subset.
+
 ## Not done yet
-Rich Markdown preview, undo beyond the browser textarea, backup/restore (manual export only, per D020), streaming (replies arrive whole), highlighting quotes inside the editor, selected-text assistance, appearance settings, command palette, an allowance/usage screen, images, voice, PDF/Word export and sharing. Several of these were only seen as buttons in Riddled and never tested there, so they are not claimed as parity.
+Rich Markdown preview, undo beyond the browser textarea, backup/restore (manual export only, per D020), streaming (replies arrive whole), highlighting quotes inside the editor, selected-text assistance, appearance settings, command palette, an allowance/usage screen, an image-attachment pipeline and PDF export. Several of these were only seen as buttons in Riddled and never tested there, so they are not claimed as parity.
+
+**Decided against (by you, 2026-11-09):** voice/spoken notes, Word export, sharing, and AI image generation.

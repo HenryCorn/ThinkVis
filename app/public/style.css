@@ -63,6 +63,20 @@ button.alt { background: transparent; color: var(--accent); border: 1px solid va
 .badge { font-family: ui-monospace, Consolas, monospace; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
 .badge.warn { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
 .fb-quote { margin: 0; padding-left: 10px; border-left: 3px solid var(--accent); color: var(--muted); font-style: italic; }
+.diagram-box { margin: 8px 0; white-space: normal; }
+.diagram-box details { margin-top: 4px; font-size: 13px; color: var(--muted); }
+.diagram-box pre { margin: 4px 0 0; white-space: pre-wrap; font-size: 12px; }
+.diagram-error { color: var(--warn); margin: 0 0 4px; }
+.diagrams { display: flex; flex-direction: column; gap: 4px; }
+.tv-diagram { width: 100%; height: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; color: var(--fg); }
+.tv-node rect, .tv-node polygon { fill: var(--surface); stroke: var(--accent); stroke-width: 1.5; }
+.tv-node text { fill: var(--fg); font: 13px system-ui, sans-serif; }
+.tv-edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.tv-edge.dotted { stroke-dasharray: 5 4; }
+.tv-edge.thick { stroke-width: 3; }
+.tv-arrowhead { fill: var(--muted); }
+.tv-labelbg { fill: var(--surface); stroke: none; opacity: 0.92; }
+.tv-edgelabel { fill: var(--muted); font: 12px system-ui, sans-serif; }
 .fb-body, .fb-reply { margin: 0; white-space: pre-wrap; }
 .fb-reply.user { color: var(--muted); }
 .fb-thread { display: flex; flex-direction: column; gap: 6px; }
