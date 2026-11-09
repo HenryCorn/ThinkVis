@@ -69,6 +69,7 @@
     try {
       const r = await api("PUT", "/api/notes/" + state.current, { content: sent, baseHash: state.baseHash });
       state.baseHash = r.hash;
+      api("POST", "/api/notes/" + state.current + "/activity", {}).catch(() => {});
       state.dirty = bodyEl.value !== sent;
       setStatus(state.dirty ? "Unsaved changes" : "Saved", state.dirty ? "dirty" : "ok");
     } catch (e) {
@@ -106,7 +107,7 @@
       $("purpose").value = n.purpose; $("mode").value = n.assistMode;
       $("empty").hidden = true; $("editor").hidden = false;
       setStatus(n.externallyChanged ? "Reloaded: changed on disk" : "Saved", "ok");
-      await refresh(); renderTree(); loadThread(id);
+      await refresh(); renderTree(); loadThread(id); loadFeedback();
     } catch (e) { setStatus(e.message, "dirty"); await refresh(); }
   }
 
@@ -232,6 +233,113 @@
   });
   $('cancel').addEventListener('click', () => { if (chat.requestId) api('POST', '/api/chat/cancel', { requestId: chat.requestId }).catch(() => {}); });
 
+  // ---- feedback ----
+  const fbState = { personas: [], busy: false, requestId: null, proactive: null };
+  const fbList = $('fb-list');
+
+  function fillPersonaSelect(sel, selected) {
+    sel.textContent = '';
+    fbState.personas.forEach((p) => sel.appendChild(new Option(p.name + (p.builtin ? '' : ' (yours)'), p.id)));
+    if (selected) sel.value = selected;
+  }
+  const BADGE = { exact: 'Quote found', moved: 'Quote moved', ambiguous: 'Quote ambiguous', missing: 'Quote gone' };
+
+  function renderFeedback(items) {
+    fbList.textContent = '';
+    if (!items.length) { fbList.appendChild(el('li', 'muted', 'No feedback yet.')); return; }
+    items.forEach((f) => {
+      const li = el('li', 'fb-item ' + f.status);
+      const head = el('div', 'fb-head');
+      head.appendChild(el('span', 'badge', f.kind));
+      head.appendChild(el('span', 'badge ' + (f.position.status === 'exact' ? '' : 'warn'), BADGE[f.position.status]));
+      if (f.freshness === 'stale') head.appendChild(el('span', 'badge warn', 'Written for an earlier version'));
+      head.appendChild(el('span', 'badge', f.status));
+      li.appendChild(head);
+      li.appendChild(el('blockquote', 'fb-quote', f.quote));
+      li.appendChild(el('p', 'fb-body', f.body));
+      li.appendChild(el('p', 'tag', (f.provider.model || '') + ' · ' + (f.persona ? f.persona.id + ' v' + f.persona.version : '') + ' · ' + f.source));
+      const row = el('div', 'row');
+      if (f.position.start !== null) {
+        const j = el('button', 'alt', 'Show in note'); j.type = 'button';
+        j.addEventListener('click', () => { bodyEl.focus(); bodyEl.setSelectionRange(f.position.start, f.position.end); });
+        row.appendChild(j);
+      }
+      const mk = (label, status) => { const b = el('button', 'alt', label); b.type = 'button'; b.addEventListener('click', async () => { await api('PATCH', '/api/feedback/' + f.id, { status }).catch((e) => ($('fb-status').textContent = e.message)); loadFeedback(); }); return b; };
+      if (f.status === 'open') { row.appendChild(mk('Resolve', 'resolved')); row.appendChild(mk('Dismiss', 'dismissed')); } else row.appendChild(mk('Reopen', 'open'));
+      const r = el('button', 'alt', 'Reply' + (f.replies ? ' (' + f.replies + ')' : '')); r.type = 'button';
+      r.addEventListener('click', () => toggleThread(li, f));
+      row.appendChild(r);
+      li.appendChild(row);
+      fbList.appendChild(li);
+    });
+  }
+
+  async function toggleThread(li, f) {
+    const old = li.querySelector('.fb-thread');
+    if (old) { old.remove(); return; }
+    const box = el('div', 'fb-thread');
+    try { (await api('GET', '/api/feedback/' + f.id)).thread.forEach((m) => { const p = el('p', 'fb-reply ' + m.role, ''); p.appendChild(el('span', 'tag', m.role === 'user' ? 'You' : (m.model || ''))); p.appendChild(document.createTextNode(m.content)); box.appendChild(p); }); } catch (e) { /* ignore */ }
+    const ta = document.createElement('textarea'); ta.rows = 2; ta.setAttribute('aria-label', 'Reply'); ta.placeholder = 'Reply to this feedback';
+    const send = el('button', '', 'Send reply'); send.type = 'button';
+    const msg = el('span', 'muted', '');
+    send.addEventListener('click', async () => {
+      if (!ta.value.trim()) return;
+      send.disabled = true; msg.textContent = 'Waiting for the model…';
+      try { await api('POST', '/api/feedback/' + f.id + '/reply', { message: ta.value, connectionId: $('conn').value, requestId: crypto.randomUUID() }); await loadFeedback(); }
+      catch (e) { msg.textContent = e.message; send.disabled = false; }
+    });
+    box.appendChild(ta); box.appendChild(send); box.appendChild(msg);
+    li.appendChild(box);
+  }
+
+  async function loadFeedback() {
+    if (!state.current) return;
+    try {
+      const d = await api('GET', '/api/notes/' + state.current + '/feedback');
+      renderFeedback(d.feedback);
+      if (d.personaId) $('persona').value = d.personaId;
+    } catch (e) { $('fb-status').textContent = e.message; }
+  }
+  async function loadPersonas() {
+    try { fbState.personas = (await api('GET', '/api/personas')).personas; } catch (e) { fbState.personas = []; }
+    fillPersonaSelect($('persona')); fillPersonaSelect($('pro-persona'));
+  }
+  $('persona').addEventListener('change', () => state.current && api('PATCH', '/api/notes/' + state.current, { personaId: $('persona').value }).catch((e) => ($('fb-status').textContent = e.message)));
+
+  $('get-fb').addEventListener('click', async () => {
+    if (!state.current || fbState.busy) return;
+    await flush();
+    fbState.requestId = crypto.randomUUID(); fbState.busy = true; $('get-fb').hidden = true; $('cancel-fb').hidden = false;
+    $('fb-status').textContent = 'Waiting for the model…';
+    try {
+      const r = await api('POST', '/api/notes/' + state.current + '/feedback/generate', { connectionId: $('conn').value, personaId: $('persona').value, requestId: fbState.requestId });
+      const dropped = r.rejected.reduce((n, x) => n + x.count, 0);
+      $('fb-status').textContent = r.stale ? 'The note changed while the model worked, so nothing was added.' : r.created.length + ' new' + (dropped ? ', ' + dropped + ' skipped (not usable or already seen)' : '') + '.';
+      await loadFeedback();
+    } catch (e) { $('fb-status').textContent = (e.data && e.data.code === 'cancelled') ? 'Cancelled.' : e.message; }
+    finally { fbState.busy = false; $('get-fb').hidden = false; $('cancel-fb').hidden = true; }
+  });
+  $('cancel-fb').addEventListener('click', () => { if (fbState.requestId) api('POST', '/api/chat/cancel', { requestId: fbState.requestId }).catch(() => {}); });
+
+  async function loadProactive() {
+    try { fbState.proactive = await api('GET', '/api/settings/proactive'); } catch (e) { return; }
+    const p = fbState.proactive;
+    const sel = $('pro-conn'); sel.textContent = '';
+    chat.conns.filter((c) => c.available).forEach((c) => sel.appendChild(new Option(c.label, c.id)));
+    if (p.connectionId) sel.value = p.connectionId;
+    if (p.personaId) $('pro-persona').value = p.personaId;
+    $('pro-state').textContent = p.enabled ? '(on)' : '(off)';
+    $('pro-toggle').textContent = p.enabled ? 'Turn off' : 'Turn on';
+  }
+  $('pro-toggle').addEventListener('click', async () => {
+    const turningOn = !(fbState.proactive && fbState.proactive.enabled);
+    try {
+      fbState.proactive = await api('PUT', '/api/settings/proactive', { connectionId: $('pro-conn').value || null, personaId: $('pro-persona').value || null, enabled: turningOn });
+      $('pro-state').textContent = fbState.proactive.enabled ? '(on)' : '(off)';
+      $('pro-toggle').textContent = fbState.proactive.enabled ? 'Turn off' : 'Turn on';
+    } catch (e) { $('pro-state').textContent = e.message; }
+  });
+
   refresh().catch((e) => setStatus(e.message, "dirty"));
-  loadConnections();
+  loadConnections().then(() => loadPersonas()).then(loadProactive);
 })();

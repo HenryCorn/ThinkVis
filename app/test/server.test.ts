@@ -24,7 +24,11 @@ before(async () => {
   const broker = new Broker(store, [
     { id: "mock-echo", adapter: "mock", label: "Mock", model: "mock-echo" },
     { id: "mock-auth", adapter: "mock", label: "Mock auth failure", model: "mock-auth" },
-  ]);
+  ], {
+    mockReply: (req) => (req.system.includes("Respond with ONLY a JSON object")
+      ? JSON.stringify({ findings: [{ quote: "photosynthesis happens in the nucleus", kind: "correction", comment: "Chloroplasts do that." }] })
+      : undefined),
+  });
   ({ server } = createApp(store, { token, broker }));
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   port = (server.address() as AddressInfo).port;
@@ -130,6 +134,50 @@ describe("HTTP host", () => {
     const noCsrf = await fetch(`${base}/api/chat/send`, { method: "POST", headers: { Cookie: cookie, "Content-Type": "application/json" }, body: "{}" });
     assert.equal(noCsrf.status, 403);
     assert.deepEqual(await (await post("/api/chat/cancel", { requestId: "http-test-9999" })).json(), { cancelled: false });
+  });
+
+  it("feedback: generate, list, resolve, reply, personas, proactive settings and export", async () => {
+    const post = (p: string, b: unknown) => fetch(`${base}${p}`, { method: "POST", headers: json, body: JSON.stringify(b) });
+    const send = (m: string, p: string, b: unknown) => fetch(`${base}${p}`, { method: m, headers: json, body: JSON.stringify(b) });
+    const get = async (p: string) => (await fetch(`${base}${p}`, { headers: { Cookie: cookie } })).json();
+    const note = await (await post("/api/notes", { path: "fb/Note.md", content: "# Bio\nI think photosynthesis happens in the nucleus.\n" })).json();
+
+    const g = await post(`/api/notes/${note.id}/feedback/generate`, { connectionId: "mock-echo", requestId: "http-fb-00001" });
+    assert.equal(g.status, 200);
+    assert.equal((await g.json()).created.length, 1);
+
+    const listed = await get(`/api/notes/${note.id}/feedback`);
+    assert.equal(listed.feedback.length, 1);
+    assert.equal(listed.feedback[0].position.status, "exact");
+    assert.equal(listed.proactive.blockedBy, "disabled");
+    const fid = listed.feedback[0].id;
+
+    const rep = await post(`/api/feedback/${fid}/reply`, { message: "why?", connectionId: "mock-echo", requestId: "http-fb-00002" });
+    assert.equal(rep.status, 200);
+    assert.equal((await rep.json()).thread.length, 2);
+
+    const res = await send("PATCH", `/api/feedback/${fid}`, { status: "resolved" });
+    assert.equal((await res.json()).status, "resolved");
+    assert.equal((await send("PATCH", `/api/feedback/${fid}`, { status: "bogus" })).status, 400);
+
+    const personas = await get("/api/personas");
+    assert.ok(personas.personas.some((p: any) => p.id === "builtin-socratic"));
+    const created = await (await post("/api/personas", { name: "Mine", instructions: "Be brief." })).json();
+    assert.equal((await send("PUT", `/api/personas/${created.id}`, { name: "Mine", instructions: "Be briefer." })).status, 200);
+    assert.equal((await send("PATCH", `/api/notes/${note.id}`, { personaId: created.id })).status, 200);
+    assert.equal((await get(`/api/notes/${note.id}/feedback`)).personaId, created.id);
+
+    assert.equal((await send("PUT", "/api/settings/proactive", { enabled: true })).status, 400, "needs a connection first");
+    const on = await send("PUT", "/api/settings/proactive", { connectionId: "mock-echo", enabled: true });
+    assert.equal((await on.json()).enabled, true);
+    await send("PATCH", `/api/notes/${note.id}`, { assistMode: "proactive" });
+    const act = await post(`/api/notes/${note.id}/activity`, {});
+    assert.equal((await act.json()).state, "too_short");
+    await send("PUT", "/api/settings/proactive", { enabled: false });
+
+    const exp = await (await post("/api/export", {})).json();
+    const { readFileSync } = await import("node:fs");
+    assert.match(readFileSync(path.join(exp.dir, "fb", "Note.md"), "utf8"), /## Feedback/);
   });
 
   it("returns 400 for traversal and bad ids, 404 for unknown routes", async () => {

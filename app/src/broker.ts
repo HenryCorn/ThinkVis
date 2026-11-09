@@ -101,11 +101,11 @@ export class Broker {
   private inflight = new Map<string, AbortController>();
   private attempts: number[] = [];
 
-  constructor(store: NoteStore, configs: ConnectionConfig[], opts: { env?: NodeJS.ProcessEnv; fetch?: typeof fetch; limits?: Partial<BrokerLimits>; enablePi?: boolean } = {}) {
+  constructor(store: NoteStore, configs: ConnectionConfig[], opts: { env?: NodeJS.ProcessEnv; fetch?: typeof fetch; limits?: Partial<BrokerLimits>; enablePi?: boolean; mockReply?: (req: import("./providers/types.ts").ChatRequest, model: string) => string | undefined } = {}) {
     this.store = store;
     this.limits = { ...DEFAULT_LIMITS, ...opts.limits };
     const env = opts.env ?? process.env;
-    const mock = mockAdapter();
+    const mock = mockAdapter({ reply: opts.mockReply });
     for (const c of configs) {
       let adapter: Adapter;
       let available = true;
@@ -147,18 +147,14 @@ export class Broker {
       .all(noteId);
   }
 
-  /** Exactly what would be sent. Also used to build the real request, so preview and send cannot drift. */
-  preview(input: { noteId: unknown; message: unknown; connectionId: unknown }) {
-    const { noteId, message } = input;
-    if (typeof noteId !== "string") throw new BrokerError("invalid", "noteId is required.");
-    if (typeof message !== "string" || !message.trim()) throw new BrokerError("invalid", "Write a message first.");
-    if (message.length > this.limits.maxMessageChars) throw new BrokerError("invalid", `Messages are limited to ${this.limits.maxMessageChars} characters.`);
-    const reg = this.conn(input.connectionId);
-    const note = this.store.get(noteId);
-
-    let body = note.content;
-    const truncated = body.length > this.limits.maxNoteChars;
-    if (truncated) body = body.slice(0, this.limits.maxNoteChars) + "\n[note truncated for length]";
+  /**
+   * System prompt for a note. `sentText` is the exact note text the provider
+   * sees, which is what returned quotes are validated against.
+   */
+  buildSystem(note: { path: string; content: string; purpose: string }, extra = ""): { system: string; truncated: boolean; sentText: string } {
+    const truncated = note.content.length > this.limits.maxNoteChars;
+    const sentText = truncated ? note.content.slice(0, this.limits.maxNoteChars) : note.content;
+    const body = truncated ? sentText + "\n[note truncated for length]" : sentText;
     const safeBody = body.replaceAll("</note", "<\\/note");
     const system = [
       "You are a patient tutor helping a learner who is writing notes to understand a topic.",
@@ -168,7 +164,74 @@ export class Broker {
       `<note path="${note.path.replaceAll('"', "")}">`,
       safeBody,
       "</note>",
+      ...(extra ? [extra] : []),
     ].join("\n");
+    return { system, truncated, sentText };
+  }
+
+  limitsSnapshot(): BrokerLimits {
+    return { ...this.limits };
+  }
+
+  connectionInfo(id: unknown) {
+    const reg = this.conn(id);
+    return { id: reg.config.id, label: reg.config.label, adapter: reg.config.adapter, model: reg.config.model, billing: reg.adapter.billing };
+  }
+
+  /**
+   * One provider call with the shared safety loop: registers the request for
+   * cancel, applies the timeout, and rechecks note, connection, budget and
+   * any caller guard before every attempt. Retries only retryable failures.
+   */
+  async run(opts: {
+    noteId: string;
+    connectionId: string;
+    requestId: string;
+    system: string;
+    messages: ChatMessage[];
+    extraGuard?: () => void;
+  }): Promise<ChatResult> {
+    const { requestId } = opts;
+    if (!REQUEST_ID.test(requestId)) throw new BrokerError("invalid", "requestId is required.");
+    if (this.inflight.has(requestId)) throw new BrokerError("duplicate", "That request is already running.", 409);
+    if (this.inflight.size >= this.limits.maxInflight) throw new BrokerError("busy", "Too many requests are running. Wait for one to finish.", 429);
+    const reg = this.conn(opts.connectionId);
+    const controller = new AbortController();
+    this.inflight.set(requestId, controller);
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(this.limits.timeoutMs)]);
+    try {
+      for (let attempt = 1; ; attempt++) {
+        opts.extraGuard?.();
+        this.guard(opts.noteId, reg.config.id, controller);
+        try {
+          return await reg.adapter.chat(
+            { system: opts.system, messages: opts.messages, maxTokens: this.limits.maxTokens },
+            { model: reg.config.model, signal },
+          );
+        } catch (e) {
+          if (!(e instanceof ProviderError)) throw new ProviderError("unavailable", "The provider call failed.");
+          if (!e.retryable || attempt >= this.limits.maxAttempts) throw e;
+          await new Promise<void>((resolve, reject) => {
+            const t = setTimeout(resolve, this.limits.backoffMs * 2 ** (attempt - 1));
+            signal.addEventListener("abort", () => { clearTimeout(t); reject(classifyAbort(signal)); }, { once: true });
+          });
+        }
+      }
+    } finally {
+      this.inflight.delete(requestId);
+    }
+  }
+
+  /** Exactly what would be sent. Also used to build the real request, so preview and send cannot drift. */
+  preview(input: { noteId: unknown; message: unknown; connectionId: unknown }) {
+    const { noteId, message } = input;
+    if (typeof noteId !== "string") throw new BrokerError("invalid", "noteId is required.");
+    if (typeof message !== "string" || !message.trim()) throw new BrokerError("invalid", "Write a message first.");
+    if (message.length > this.limits.maxMessageChars) throw new BrokerError("invalid", `Messages are limited to ${this.limits.maxMessageChars} characters.`);
+    const reg = this.conn(input.connectionId);
+    const note = this.store.get(noteId);
+
+    const { system, truncated } = this.buildSystem(note);
 
     const rows = this.store.db
       .prepare("SELECT role, content FROM chat_messages WHERE note_id = ? ORDER BY rowid DESC")
@@ -224,33 +287,10 @@ export class Broker {
   async chat(input: { noteId: unknown; message: unknown; connectionId: unknown; requestId: unknown }) {
     const requestId = input.requestId;
     if (typeof requestId !== "string" || !REQUEST_ID.test(requestId)) throw new BrokerError("invalid", "requestId is required.");
-    if (this.inflight.has(requestId)) throw new BrokerError("duplicate", "That request is already running.", 409);
-    if (this.inflight.size >= this.limits.maxInflight) throw new BrokerError("busy", "Too many requests are running. Wait for one to finish.", 429);
-
     const built = this.preview(input);
     const reg = this.conn(input.connectionId);
-    const controller = new AbortController();
-    this.inflight.set(requestId, controller);
-    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(this.limits.timeoutMs)]);
-    try {
-      let result: ChatResult | null = null;
-      for (let attempt = 1; ; attempt++) {
-        this.guard(input.noteId as string, reg.config.id, controller);
-        try {
-          result = await reg.adapter.chat(
-            { system: built.system, messages: built.messages, maxTokens: this.limits.maxTokens },
-            { model: reg.config.model, signal },
-          );
-          break;
-        } catch (e) {
-          if (!(e instanceof ProviderError)) throw new ProviderError("unavailable", "The provider call failed.");
-          if (!e.retryable || attempt >= this.limits.maxAttempts) throw e;
-          await new Promise<void>((resolve, reject) => {
-            const t = setTimeout(resolve, this.limits.backoffMs * 2 ** (attempt - 1));
-            signal.addEventListener("abort", () => { clearTimeout(t); reject(classifyAbort(signal)); }, { once: true });
-          });
-        }
-      }
+    {
+      const result = await this.run({ noteId: input.noteId as string, connectionId: reg.config.id, requestId, system: built.system, messages: built.messages });
       let text = typeof result.text === "string" ? result.text.trim() : "";
       if (!text) throw new ProviderError("invalid_output", "The provider returned no usable text.");
       if (text.length > this.limits.maxOutputChars) text = text.slice(0, this.limits.maxOutputChars) + "\n[response truncated]";
@@ -279,8 +319,6 @@ export class Broker {
         },
         manifest: built.manifest,
       };
-    } finally {
-      this.inflight.delete(requestId);
     }
   }
 }

@@ -47,6 +47,28 @@
         </div>
         <label class="sr" for="body">Note text</label>
         <textarea id="body" spellcheck="true"></textarea>
+        <section class="fb" aria-label="Feedback">
+          <div class="row">
+            <strong>Feedback</strong>
+            <label for="persona">Persona</label>
+            <select id="persona"></select>
+            <button id="get-fb" type="button">Get feedback</button>
+            <button id="cancel-fb" type="button" class="alt" hidden>Cancel</button>
+            <span id="fb-status" class="muted" role="status"></span>
+          </div>
+          <details id="proactive-box">
+            <summary>Proactive feedback <span id="pro-state" class="muted"></span></summary>
+            <div class="row">
+              <label for="pro-conn">Use</label>
+              <select id="pro-conn"></select>
+              <label for="pro-persona">Persona</label>
+              <select id="pro-persona"></select>
+              <button id="pro-toggle" type="button" class="alt">Turn on</button>
+            </div>
+            <p class="muted">When on, a note set to Proactive sends its text to the chosen model after you pause editing, at most every few minutes and ten runs a day. Quiet notes never send anything on their own.</p>
+          </details>
+          <ul id="fb-list" class="fb-list"></ul>
+        </section>
         <section class="chat" aria-label="Note chat">
           <div class="row">
             <label for="conn">Model</label>

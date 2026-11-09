@@ -4,7 +4,9 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { Broker, BrokerError, loadConnections } from "./broker.ts";
+import { Feedback } from "./feedback.ts";
 import { NoteError, NoteStore } from "./notes.ts";
+import { Proactive } from "./proactive.ts";
 import { PathError } from "./paths.ts";
 import { ProviderError } from "./providers/types.ts";
 
@@ -66,8 +68,10 @@ async function readJson(req: http.IncomingMessage): Promise<Record<string, unkno
   return parsed as Record<string, unknown>;
 }
 
-export function createApp(store: NoteStore, opts: { token?: string; broker?: Broker } = {}) {
+export function createApp(store: NoteStore, opts: { token?: string; broker?: Broker; feedback?: Feedback; proactive?: Proactive } = {}) {
   const broker = opts.broker ?? new Broker(store, []);
+  const feedback = opts.feedback ?? new Feedback(store, broker);
+  const proactive = opts.proactive ?? new Proactive(store, feedback, broker);
   const token = opts.token ?? randomBytes(32).toString("hex");
 
   const server = http.createServer(async (req, res) => {
@@ -125,11 +129,46 @@ export function createApp(store: NoteStore, opts: { token?: string; broker?: Bro
           const body = await readJson(req);
           if (body.path !== undefined) store.move(id, body.path);
           if (body.purpose !== undefined || body.assistMode !== undefined) store.setMeta(id, body);
+          if (body.personaId !== undefined) feedback.setNotePersona(id, body.personaId);
+          if (body.assistMode !== undefined) proactive.modeChanged(id);
           return sendJson(res, 200, { ok: true });
         }
         if (method === "DELETE") {
           store.remove(id);
           return sendJson(res, 200, { ok: true });
+        }
+      }
+      if (resource === "notes" && parts.length === 4 && UUID.test(id)) {
+        if (parts[3] === "feedback" && method === "GET") return sendJson(res, 200, { feedback: feedback.list(id), proactive: proactive.status(id), personaId: feedback.notePersonaId(id) });
+        if (parts[3] === "activity" && method === "POST") return sendJson(res, 200, { state: proactive.activity(id) });
+      }
+      if (resource === "notes" && parts.length === 5 && parts[3] === "feedback" && parts[4] === "generate" && method === "POST" && UUID.test(id)) {
+        const body = await readJson(req);
+        const r = await feedback.generate({
+          noteId: id, connectionId: body.connectionId as string, personaId: (body.personaId as string | undefined) ?? null,
+          requestId: body.requestId as string, source: "requested",
+        });
+        return sendJson(res, 200, r);
+      }
+      if (resource === "feedback" && parts.length >= 2 && UUID.test(id ?? "")) {
+        if (parts.length === 3 && method === "GET") return sendJson(res, 200, feedback.get(id));
+        if (parts.length === 3 && method === "PATCH") return sendJson(res, 200, feedback.setStatus(id, (await readJson(req)).status));
+        if (parts.length === 4 && parts[3] === "reply" && method === "POST") {
+          const body = await readJson(req);
+          return sendJson(res, 200, await feedback.reply(id, { message: body.message, connectionId: body.connectionId, requestId: body.requestId }));
+        }
+      }
+      if (resource === "personas") {
+        if (parts.length === 2 && method === "GET") return sendJson(res, 200, { personas: feedback.listPersonas() });
+        if (parts.length === 2 && method === "POST") { const b = await readJson(req); return sendJson(res, 201, feedback.createPersona({ name: b.name, instructions: b.instructions })); }
+        if (parts.length === 3 && method === "PUT" && /^[a-z0-9-]{2,64}$/.test(id)) { const b = await readJson(req); return sendJson(res, 200, feedback.updatePersona(id, { name: b.name, instructions: b.instructions })); }
+      }
+      if (resource === "settings" && parts[2] === "proactive" && parts.length === 3) {
+        if (method === "GET") return sendJson(res, 200, feedback.getProactive());
+        if (method === "PUT") {
+          const next = feedback.setProactive(await readJson(req));
+          if (!next.enabled) proactive.cancelAll();
+          return sendJson(res, 200, next);
         }
       }
       if (resource === "notes" && parts.length === 4 && parts[3] === "thread" && method === "GET") {
@@ -153,7 +192,7 @@ export function createApp(store: NoteStore, opts: { token?: string; broker?: Bro
         return sendJson(res, 200, { results: store.search(url.searchParams.get("q") ?? "") });
       }
       if (resource === "export" && parts.length === 2 && method === "POST") {
-        return sendJson(res, 200, store.exportMarkdown());
+        return sendJson(res, 200, store.exportMarkdown((noteId, content) => content + feedback.exportSection(noteId)));
       }
       return sendJson(res, 404, { error: "Not found." });
     } catch (e) {
@@ -181,7 +220,8 @@ if (import.meta.main) {
   const store = new NoteStore(dataDir);
   const connectionsFile = path.join(store.dataDir, "connections.json");
   const broker = new Broker(store, loadConnections(connectionsFile), { enablePi: process.env.THINKVIS_ENABLE_PI_BRIDGE === "1" });
-  const { server, token } = createApp(store, { broker });
+  const feedback = new Feedback(store, broker);
+  const { server, token } = createApp(store, { broker, feedback, proactive: new Proactive(store, feedback, broker) });
   server.listen(port, "127.0.0.1", () => {
     const actual = (server.address() as AddressInfo).port;
     console.log(`ThinkVis data folder: ${store.dataDir}`);

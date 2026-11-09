@@ -37,6 +37,66 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX chat_messages_note ON chat_messages(note_id);
   `,
+  `
+  CREATE TABLE personas (
+    id          TEXT PRIMARY KEY,
+    builtin     INTEGER NOT NULL DEFAULT 0,
+    version     INTEGER NOT NULL DEFAULT 1,
+    name        TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    archived_at TEXT
+  );
+  CREATE TABLE persona_versions (
+    persona_id   TEXT NOT NULL,
+    version      INTEGER NOT NULL,
+    name         TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    PRIMARY KEY (persona_id, version)
+  );
+  ALTER TABLE notes ADD COLUMN persona_id TEXT;
+  CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+  CREATE TABLE feedback (
+    id              TEXT PRIMARY KEY,
+    note_id         TEXT NOT NULL,
+    note_hash       TEXT NOT NULL,
+    quote           TEXT NOT NULL,
+    anchor_start    INTEGER NOT NULL,
+    anchor_end      INTEGER NOT NULL,
+    anchor_prefix   TEXT NOT NULL,
+    anchor_suffix   TEXT NOT NULL,
+    kind            TEXT NOT NULL CHECK (kind IN ('correction','question','suggestion')),
+    body            TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved','dismissed')),
+    source          TEXT NOT NULL CHECK (source IN ('requested','proactive')),
+    dedupe_key      TEXT NOT NULL,
+    persona_id      TEXT,
+    persona_version INTEGER,
+    connection_id   TEXT,
+    provider        TEXT,
+    billing         TEXT,
+    model           TEXT,
+    context_hash    TEXT,
+    created_at      TEXT NOT NULL,
+    resolved_at     TEXT
+  );
+  CREATE UNIQUE INDEX feedback_dedupe ON feedback(note_id, dedupe_key);
+  CREATE INDEX feedback_note ON feedback(note_id);
+  CREATE TABLE feedback_replies (
+    id            TEXT PRIMARY KEY,
+    feedback_id   TEXT NOT NULL,
+    role          TEXT NOT NULL CHECK (role IN ('user','assistant')),
+    content       TEXT NOT NULL,
+    connection_id TEXT,
+    provider      TEXT,
+    billing       TEXT,
+    model         TEXT,
+    created_at    TEXT NOT NULL
+  );
+  CREATE INDEX feedback_replies_fb ON feedback_replies(feedback_id);
+  `,
 ];
 
 export function openDb(file: string): DatabaseSync {

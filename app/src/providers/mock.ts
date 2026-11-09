@@ -1,11 +1,11 @@
 import { ProviderError, classifyAbort } from "./types.ts";
-import type { Adapter } from "./types.ts";
+import type { Adapter, ChatRequest } from "./types.ts";
 
 /**
  * Deterministic offline provider for contract tests and development. The
  * model name selects a behavior so tests can exercise every failure path.
  */
-export function mockAdapter(): Adapter {
+export function mockAdapter(opts: { reply?: (req: ChatRequest, model: string) => string | undefined } = {}): Adapter {
   const seen = new Map<string, number>();
   return {
     kind: "mock",
@@ -36,6 +36,8 @@ export function mockAdapter(): Adapter {
         case "mock-huge":
           return { text: "x".repeat(60_000), usage: null, finishReason: "stop" };
       }
+      const scripted = opts.reply?.(req, model);
+      if (scripted !== undefined) return { text: scripted, usage: { inputTokens: 1, outputTokens: 1 }, finishReason: "stop" };
       const last = req.messages[req.messages.length - 1]?.content ?? "";
       return {
         text: `MOCK(${model}) saw ${req.messages.length} message(s). Last: ${last.slice(0, 200)}`,

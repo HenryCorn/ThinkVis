@@ -12,6 +12,7 @@ import {
   renameSync,
   statSync,
   unlinkSync,
+  writeFileSync,
   writeSync,
 } from "node:fs";
 import path from "node:path";
@@ -415,16 +416,18 @@ export class NoteStore {
   }
 
   /** Copy every live note as plain Markdown into exports/<timestamp>. Sources are untouched. */
-  exportMarkdown(): { dir: string; count: number } {
+  exportMarkdown(decorate?: (noteId: string, content: string) => string): { dir: string; count: number } {
     this.sync({ deep: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const dir = path.join(this.exportDir, stamp);
-    const rows = this.db.prepare("SELECT path FROM notes WHERE deleted_at IS NULL").all() as { path: string }[];
-    for (const { path: rel } of rows) {
+    const rows = this.db.prepare("SELECT id, path FROM notes WHERE deleted_at IS NULL").all() as { id: string; path: string }[];
+    for (const { id, path: rel } of rows) {
       const from = resolveInside(this.root, rel);
       const to = path.join(dir, ...rel.split("/"));
       mkdirSync(path.dirname(to), { recursive: true });
-      copyFileSync(from, to);
+      const read = decorate ? this.readFile(rel) : null;
+      if (decorate && read) writeFileSync(to, decorate(id, read.content), "utf8");
+      else copyFileSync(from, to);
     }
     mkdirSync(dir, { recursive: true });
     return { dir, count: rows.length };

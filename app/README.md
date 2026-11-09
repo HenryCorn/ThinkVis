@@ -1,11 +1,11 @@
-# ThinkVis app (Phase 1 notebook, Phase 2 provider broker)
+# ThinkVis app (notebook, provider broker, margin feedback)
 
 Local Markdown notebook with note-scoped chat through a provider broker. No npm dependencies. Requires Node 24+. The app makes no network calls unless you configure a connection and press Send.
 
 ```
 cd app
 npm start        # prints http://127.0.0.1:4317/?token=...  Open that link once.
-npm test         # 48 tests
+npm test         # 70 tests
 ```
 
 Environment: `THINKVIS_DATA` (default `../app-data`, git-ignored), `THINKVIS_PORT` (default 4317).
@@ -30,5 +30,13 @@ Copy `connections.example.json` to `app-data/connections.json` and edit it. The 
 
 Behavior: the note text plus your message is sent only when you press Send (the UI shows exactly what will be sent). Providers get no tools. There is no automatic fallback to another provider. Retries happen only for rate limits and outages, re-checking the note, connection and hourly cap before each attempt. Every reply is stored with its provider, model and billing label, and switching connections keeps the thread. Chat never edits the note.
 
+## Feedback and personas (Phase 3)
+- **Get feedback** asks the chosen model for up to three corrections, questions or suggestions, each tied to an exact quote from your note. Quotes must appear once in the note; anything the model invents, repeats or cannot anchor is dropped and counted. Malformed model output stores nothing.
+- Each item records the note revision, persona (with version), connection and model. The list shows two separate facts: **quote position** (found, moved, ambiguous, gone) and **freshness** (written for an earlier version). "Show in note" selects the quote.
+- Resolve, dismiss, reopen, and reply in a thread. A resolved item is not reopened by a later duplicate.
+- Personas are independent of the model. Three built-ins plus your own; editing creates a new version and old feedback keeps the version that wrote it.
+- **Proactive feedback** is off by default, needs a chosen connection, and only acts on notes set to Proactive. It waits for a quiet period, a per-note cooldown and a daily cap, requires the note to have changed, and rechecks everything before each outbound attempt. Switching a note to Quiet, or turning the switch off, cancels queued work and aborts an in-flight request. Text already sent cannot be recalled.
+- Markdown export appends a Feedback section (resolved and dismissed included) to the exported copy only.
+
 ## Not done yet
-Rich Markdown preview, undo beyond the browser textarea, backup/restore (manual export only, per D020), proactive feedback, personas, streaming (replies arrive whole).
+Rich Markdown preview, undo beyond the browser textarea, backup/restore (manual export only, per D020), streaming (replies arrive whole), rich Markdown preview, per-note highlight of quotes inside the editor, sharing.

@@ -42,6 +42,8 @@ Do not request keys in chat, read credential stores, download models or start lo
 **Tests:** common adapter suite against deterministic mock; selected real route only after authorization; no-source-edit guarantee; provider switch preserves app-owned history; auth/timeout/invalid output/cancel states; no local-only cloud fallback.
 
 ## Phase 3 — margin learning loop
+**Status 2026-11-09: implemented and tested with a scripted mock provider (70 tests) and a headless-browser pass over the UI. Not yet tried with a real model.**
+
 - Source-revision-bound feedback schema, stable block/quote anchors and deduplication.
 - Thread replies, resolve/dismiss/history/export, stale-anchor UI.
 - Opt-in proactive scheduling with cooldown/spend/egress controls; quiet edits never infer.
