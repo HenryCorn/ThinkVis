@@ -32,6 +32,8 @@ Do not request keys in chat, read credential stores, download models or start lo
 **Tests:** restart persistence, atomic-save recovery, external file edit, unsupported Markdown preservation, path traversal/symlink rules, export round-trip and no accidental source deletion.
 
 ## Phase 2 — explicit chat and provider portability
+**Status 2026-11-09: implemented with mock-backed tests (48 passing). Not yet exercised against any real provider; streaming not done.**
+
 - App-owned broker contract, connection/model profiles and model picker.
 - Provider identity/usage labels on every response; no credential in renderer.
 - Note-scope preview, context budget, isolated conversation history, non-streaming and streaming adapters.

@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, describe, it } from "node:test";
+import { Broker } from "../src/broker.ts";
 import { NoteStore } from "../src/notes.ts";
 import { createApp } from "../src/server.ts";
 
@@ -20,7 +21,11 @@ const json = { "Content-Type": "application/json", "X-ThinkVis": "1", Cookie: co
 before(async () => {
   dir = mkdtempSync(path.join(tmpdir(), "thinkvis-srv-"));
   store = new NoteStore(dir);
-  ({ server } = createApp(store, { token }));
+  const broker = new Broker(store, [
+    { id: "mock-echo", adapter: "mock", label: "Mock", model: "mock-echo" },
+    { id: "mock-auth", adapter: "mock", label: "Mock auth failure", model: "mock-auth" },
+  ]);
+  ({ server } = createApp(store, { token, broker }));
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   port = (server.address() as AddressInfo).port;
   base = `http://127.0.0.1:${port}`;
@@ -94,6 +99,37 @@ describe("HTTP host", () => {
     const del = await fetch(`${base}/api/notes/${created.id}`, { method: "DELETE", headers: json, body: "{}" });
     assert.equal(del.status, 200);
     assert.equal((await fetch(`${base}/api/notes/${created.id}`, { headers: { Cookie: cookie } })).status, 404);
+  });
+
+  it("chat: lists connections, previews, sends, stores the thread, maps provider errors", async () => {
+    const post = (p: string, b: unknown) => fetch(`${base}${p}`, { method: "POST", headers: json, body: JSON.stringify(b) });
+    const note = await (await post("/api/notes", { path: "chat/Note.md", content: "# Chat\nbody" })).json();
+
+    const list = await (await fetch(`${base}/api/connections`, { headers: { Cookie: cookie } })).json();
+    assert.deepEqual(list.connections.map((c: any) => c.id), ["mock-echo", "mock-auth"]);
+    assert.ok(!JSON.stringify(list).match(/key|secret|token/i));
+
+    const prev = await post("/api/chat/preview", { noteId: note.id, message: "hi", connectionId: "mock-echo" });
+    assert.equal(prev.status, 200);
+    assert.deepEqual((await prev.json()).manifest.tools, []);
+
+    const sent = await post("/api/chat/send", { noteId: note.id, message: "hi", connectionId: "mock-echo", requestId: "http-test-0001" });
+    assert.equal(sent.status, 200);
+    assert.equal((await sent.json()).assistant.provider, "mock");
+
+    const thread = await (await fetch(`${base}/api/notes/${note.id}/thread`, { headers: { Cookie: cookie } })).json();
+    assert.equal(thread.messages.length, 2);
+
+    const bad = await post("/api/chat/send", { noteId: note.id, message: "hi", connectionId: "mock-auth", requestId: "http-test-0002" });
+    assert.equal(bad.status, 502);
+    assert.equal((await bad.json()).code, "auth");
+
+    const noConn = await post("/api/chat/send", { noteId: note.id, message: "hi", connectionId: "nope", requestId: "http-test-0003" });
+    assert.equal(noConn.status, 404);
+
+    const noCsrf = await fetch(`${base}/api/chat/send`, { method: "POST", headers: { Cookie: cookie, "Content-Type": "application/json" }, body: "{}" });
+    assert.equal(noCsrf.status, 403);
+    assert.deepEqual(await (await post("/api/chat/cancel", { requestId: "http-test-9999" })).json(), { cancelled: false });
   });
 
   it("returns 400 for traversal and bad ids, 404 for unknown routes", async () => {

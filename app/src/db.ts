@@ -19,6 +19,24 @@ const MIGRATIONS: string[] = [
   CREATE UNIQUE INDEX notes_live_path ON notes(path) WHERE deleted_at IS NULL;
   CREATE VIRTUAL TABLE note_fts USING fts5(id UNINDEXED, title, body);
   `,
+  `
+  CREATE TABLE chat_messages (
+    id            TEXT PRIMARY KEY,
+    note_id       TEXT NOT NULL,
+    role          TEXT NOT NULL CHECK (role IN ('user','assistant')),
+    content       TEXT NOT NULL,
+    connection_id TEXT,
+    provider      TEXT,
+    billing       TEXT,
+    model         TEXT,
+    input_tokens  INTEGER,
+    output_tokens INTEGER,
+    note_hash     TEXT,
+    context_hash  TEXT,
+    created_at    TEXT NOT NULL
+  );
+  CREATE INDEX chat_messages_note ON chat_messages(note_id);
+  `,
 ];
 
 export function openDb(file: string): DatabaseSync {

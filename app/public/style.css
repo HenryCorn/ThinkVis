@@ -43,3 +43,13 @@ button.alt { background: transparent; color: var(--accent); border: 1px solid va
   .app { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); height: auto; }
   .side { border-right: 0; border-bottom: 1px solid var(--line); max-height: 45vh; }
 }
+
+.chat { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat label { color: var(--muted); font-size: 14px; }
+.thread { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+.thread li { border-radius: 8px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; }
+.thread li.user { background: var(--bg); }
+.thread .tag { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; font-family: ui-monospace, Consolas, monospace; }
+.preview { max-height: 200px; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.compose textarea { flex: 1; min-height: 52px; min-width: 200px; width: auto; font-family: inherit; font-size: 15px; }
+.chat-error { color: var(--warn); }

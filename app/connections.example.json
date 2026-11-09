@@ -1,0 +1,29 @@
+[
+  {
+    "id": "claude",
+    "adapter": "anthropic",
+    "label": "Claude (API)",
+    "model": "REPLACE_WITH_A_MODEL_ID_YOUR_KEY_CAN_USE",
+    "keyEnv": "THINKVIS_ANTHROPIC_KEY"
+  },
+  {
+    "id": "gemini",
+    "adapter": "google",
+    "label": "Gemini (API)",
+    "model": "REPLACE_WITH_A_MODEL_ID_YOUR_KEY_CAN_USE",
+    "keyEnv": "THINKVIS_GOOGLE_KEY"
+  },
+  {
+    "id": "copilot-pi",
+    "adapter": "pi",
+    "label": "GitHub Copilot via Pi (experimental)",
+    "model": "github-copilot/REPLACE_WITH_A_MODEL_ID_FROM_pi_--list-models",
+    "command": ["node", "C:/path/to/pi/dist/cli.js"]
+  },
+  {
+    "id": "mock",
+    "adapter": "mock",
+    "label": "Offline mock",
+    "model": "mock-echo"
+  }
+]

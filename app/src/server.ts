@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
+import { Broker, BrokerError, loadConnections } from "./broker.ts";
 import { NoteError, NoteStore } from "./notes.ts";
 import { PathError } from "./paths.ts";
+import { ProviderError } from "./providers/types.ts";
 
 const PUBLIC_DIR = path.resolve(import.meta.dirname, "..", "public");
 const STATIC: Record<string, { file: string; type: string }> = {
@@ -64,7 +66,8 @@ async function readJson(req: http.IncomingMessage): Promise<Record<string, unkno
   return parsed as Record<string, unknown>;
 }
 
-export function createApp(store: NoteStore, opts: { token?: string } = {}) {
+export function createApp(store: NoteStore, opts: { token?: string; broker?: Broker } = {}) {
+  const broker = opts.broker ?? new Broker(store, []);
   const token = opts.token ?? randomBytes(32).toString("hex");
 
   const server = http.createServer(async (req, res) => {
@@ -129,6 +132,19 @@ export function createApp(store: NoteStore, opts: { token?: string } = {}) {
           return sendJson(res, 200, { ok: true });
         }
       }
+      if (resource === "notes" && parts.length === 4 && parts[3] === "thread" && method === "GET") {
+        if (!UUID.test(id)) return sendJson(res, 404, { error: "Not found." });
+        return sendJson(res, 200, { messages: broker.thread(id) });
+      }
+      if (resource === "connections" && parts.length === 2 && method === "GET") {
+        return sendJson(res, 200, { connections: broker.listConnections() });
+      }
+      if (resource === "chat" && parts.length === 3 && method === "POST") {
+        const body = await readJson(req);
+        if (parts[2] === "preview") return sendJson(res, 200, broker.preview(body as any));
+        if (parts[2] === "cancel") return sendJson(res, 200, { cancelled: broker.cancel(body.requestId) });
+        if (parts[2] === "send") return sendJson(res, 200, await broker.chat(body as any));
+      }
       if (resource === "folders" && parts.length === 2 && method === "POST") {
         const body = await readJson(req);
         return sendJson(res, 201, store.createFolder(body.path));
@@ -146,6 +162,11 @@ export function createApp(store: NoteStore, opts: { token?: string } = {}) {
         return sendJson(res, status, { error: e.message, code: e.code, ...e.detail });
       }
       if (e instanceof PathError) return sendJson(res, 400, { error: e.message, code: "invalid" });
+      if (e instanceof BrokerError) return sendJson(res, e.status, { error: e.message, code: e.code, ...e.detail });
+      if (e instanceof ProviderError) {
+        const status = e.code === "cancelled" ? 409 : e.code === "timeout" ? 504 : e.code === "not_configured" ? 409 : e.code === "rate_limit" ? 429 : 502;
+        return sendJson(res, status, { error: e.message, code: e.code, retryable: e.retryable });
+      }
       console.error(e);
       return sendJson(res, 500, { error: "Internal error." });
     }
@@ -158,11 +179,15 @@ if (import.meta.main) {
   const dataDir = process.env.THINKVIS_DATA ?? path.resolve(import.meta.dirname, "..", "..", "app-data");
   const port = Number(process.env.THINKVIS_PORT ?? 4317);
   const store = new NoteStore(dataDir);
-  const { server, token } = createApp(store);
+  const connectionsFile = path.join(store.dataDir, "connections.json");
+  const broker = new Broker(store, loadConnections(connectionsFile), { enablePi: process.env.THINKVIS_ENABLE_PI_BRIDGE === "1" });
+  const { server, token } = createApp(store, { broker });
   server.listen(port, "127.0.0.1", () => {
     const actual = (server.address() as AddressInfo).port;
     console.log(`ThinkVis data folder: ${store.dataDir}`);
     console.log(`Open: http://127.0.0.1:${actual}/?token=${token}`);
+    const conns = broker.listConnections();
+    console.log(conns.length ? conns.map((c) => `Connection ${c.id}: ${c.available ? "ready" : "unavailable (" + c.reason + ")"}`).join("\n") : `No AI connections. Add some to ${connectionsFile} (see app/connections.example.json).`);
     if (store.skipped.length) console.log(`Skipped ${store.skipped.length} file(s) that are not UTF-8 text or are too large.`);
   });
   const stop = () => server.close(() => { store.close(); process.exit(0); });

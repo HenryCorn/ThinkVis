@@ -47,6 +47,25 @@
         </div>
         <label class="sr" for="body">Note text</label>
         <textarea id="body" spellcheck="true"></textarea>
+        <section class="chat" aria-label="Note chat">
+          <div class="row">
+            <label for="conn">Model</label>
+            <select id="conn"></select>
+            <span id="conn-info" class="muted"></span>
+          </div>
+          <ol id="thread" class="thread" aria-live="polite"></ol>
+          <details id="preview-box">
+            <summary>What will be sent</summary>
+            <pre id="preview" class="preview"></pre>
+          </details>
+          <div class="row compose">
+            <label class="sr" for="msg">Message about this note</label>
+            <textarea id="msg" rows="2" placeholder="Ask about this note. The note text is sent with your message."></textarea>
+            <button id="send" type="button">Send</button>
+            <button id="cancel" type="button" class="alt" hidden>Cancel</button>
+          </div>
+          <p id="chat-status" class="muted" role="status"></p>
+        </section>
       </section>
     </main>
   </div>

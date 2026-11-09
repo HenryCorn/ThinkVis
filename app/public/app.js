@@ -106,7 +106,7 @@
       $("purpose").value = n.purpose; $("mode").value = n.assistMode;
       $("empty").hidden = true; $("editor").hidden = false;
       setStatus(n.externallyChanged ? "Reloaded: changed on disk" : "Saved", "ok");
-      await refresh(); renderTree();
+      await refresh(); renderTree(); loadThread(id);
     } catch (e) { setStatus(e.message, "dirty"); await refresh(); }
   }
 
@@ -159,5 +159,79 @@
     catch (e) { $("export-msg").textContent = e.message; }
   });
 
+
+  // ---- chat ----
+  const chat = { conns: [], busy: false, requestId: null };
+  const threadEl = $('thread');
+
+  function tagFor(m) {
+    const bits = [m.model, m.provider, m.billing === 'api' ? 'API billing' : m.billing === 'subscription-bridge' ? 'subscription bridge (usage not measured)' : m.billing === 'none' ? 'no provider (mock)' : null];
+    if (m.inputTokens != null || m.outputTokens != null) bits.push((m.inputTokens ?? '?') + ' in / ' + (m.outputTokens ?? '?') + ' out tokens');
+    return bits.filter(Boolean).join(' · ');
+  }
+  function addMessage(m) {
+    const li = el('li', m.role);
+    li.appendChild(el('span', 'tag', m.role === 'user' ? 'You' : tagFor(m)));
+    li.appendChild(document.createTextNode(m.content));
+    threadEl.appendChild(li);
+    threadEl.scrollTop = threadEl.scrollHeight;
+  }
+  async function loadThread(id) {
+    threadEl.textContent = '';
+    try { (await api('GET', '/api/notes/' + id + '/thread')).messages.forEach(addMessage); } catch (e) { $('chat-status').textContent = e.message; }
+  }
+  async function loadConnections() {
+    try { chat.conns = (await api('GET', '/api/connections')).connections; } catch (e) { chat.conns = []; }
+    const sel = $('conn'); sel.textContent = '';
+    if (!chat.conns.length) { sel.appendChild(new Option('No connections configured', '')); sel.disabled = true; $('send').disabled = true; $('conn-info').textContent = 'Add one in app-data/connections.json'; return; }
+    chat.conns.forEach((c) => { const o = new Option(c.label + (c.available ? '' : ' (unavailable)'), c.id); o.disabled = !c.available; sel.appendChild(o); });
+    const first = chat.conns.find((c) => c.available);
+    if (first) sel.value = first.id;
+    updateConnInfo();
+  }
+  function updateConnInfo() {
+    const c = chat.conns.find((x) => x.id === $('conn').value);
+    $('conn-info').textContent = c ? (c.available ? c.model + ' · sends this note to ' + c.adapter : c.reason) : '';
+    $('send').disabled = !c || !c.available;
+  }
+  $('conn').addEventListener('change', updateConnInfo);
+
+  $('preview-box').addEventListener('toggle', async () => {
+    if (!$('preview-box').open || !state.current) return;
+    try {
+      await flush();
+      const p = await api('POST', '/api/chat/preview', { noteId: state.current, message: $('msg').value || '(your message)', connectionId: $('conn').value });
+      const m = p.manifest;
+      const lines = [
+        'To: ' + m.connection.label + ' (' + m.connection.model + ')',
+        'Characters: ' + m.totalChars + (m.noteTruncated ? ' (note truncated)' : ''),
+        'Tools: none',
+        '',
+        '--- system ---',
+        p.system,
+        '',
+        '--- messages ---',
+      ].concat(p.messages.map((x) => x.role + ': ' + x.content));
+      $('preview').textContent = lines.join('\n');
+    } catch (e) { $('preview').textContent = e.message; }
+  });
+
+  function setBusy(b) { chat.busy = b; $('send').hidden = b; $('cancel').hidden = !b; $('msg').disabled = b; }
+  $('send').addEventListener('click', async () => {
+    const message = $('msg').value.trim();
+    if (!message || !state.current || chat.busy) return;
+    await flush();
+    chat.requestId = crypto.randomUUID(); setBusy(true); $('chat-status').className = 'muted'; $('chat-status').textContent = 'Waiting for the model…';
+    try {
+      const r = await api('POST', '/api/chat/send', { noteId: state.current, message, connectionId: $('conn').value, requestId: chat.requestId });
+      addMessage(r.user); addMessage(r.assistant); $('msg').value = ''; $('chat-status').textContent = '';
+    } catch (e) {
+      $('chat-status').className = 'chat-error';
+      $('chat-status').textContent = (e.data && e.data.code === 'cancelled') ? 'Cancelled. Nothing was saved.' : e.message + (e.data && e.data.retryable ? ' You can try again.' : '');
+    } finally { setBusy(false); $('msg').focus(); }
+  });
+  $('cancel').addEventListener('click', () => { if (chat.requestId) api('POST', '/api/chat/cancel', { requestId: chat.requestId }).catch(() => {}); });
+
   refresh().catch((e) => setStatus(e.message, "dirty"));
+  loadConnections();
 })();
