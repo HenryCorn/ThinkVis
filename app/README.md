@@ -23,9 +23,9 @@ Environment: `THINKVIS_DATA` (default `../app-data`, git-ignored), `THINKVIS_POR
 - Server: binds 127.0.0.1, per-launch token exchanged for an HttpOnly SameSite=Strict cookie, Host and Origin checks, `X-ThinkVis` header on writes, strict CSP.
 
 ## Connections (Phase 2)
-Copy  to  and edit it. The file holds names only, never keys.
-- **Anthropic / Google (API):** set the key in an environment variable named in  (must start with ), then restart. You need real API access for the model you name; a chat subscription does not provide it. Model ids are yours to choose, none are hard-coded.
-- **GitHub Copilot via Pi (experimental, off by default):** needs your own Pi install signed in to that model, and . It runs Pi with no tools, MCP, extensions, skills, sessions or context files, in a throwaway folder with a minimal environment. This route is **not verified against a live account**.
+Copy `connections.example.json` to `app-data/connections.json` and edit it. The file holds names only, never keys.
+- **Anthropic / Google (API):** set the key in an environment variable named in `keyEnv` (must start with `THINKVIS_`), then restart. You need real API access for the model you name; a chat subscription does not provide it. Model ids are yours to choose, none are hard-coded.
+- **GitHub Copilot via Pi (experimental, off by default):** needs your own Pi install signed in to that model, and `THINKVIS_ENABLE_PI_BRIDGE=1`. It runs Pi with no tools, MCP, extensions, skills, sessions or context files, in a throwaway folder with a minimal environment. This route is **not verified against a live account**.
 - **Mock:** deterministic offline provider for tests.
 
 Behavior: the note text plus your message is sent only when you press Send (the UI shows exactly what will be sent). Providers get no tools. There is no automatic fallback to another provider. Retries happen only for rate limits and outages, re-checking the note, connection and hourly cap before each attempt. Every reply is stored with its provider, model and billing label, and switching connections keeps the thread. Chat never edits the note.
